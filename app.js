@@ -110,6 +110,12 @@ function renderDebug() {
     rows.push(['Statusbiter', `0x${s.flags.toString(16).padStart(2, '0')}`]);
     rows.push(['Rådata', state.statusHex]);
   }
+  if (state.diag) {
+    const d = state.diag;
+    rows.push(['Kalibrering', d.capFlash === null ? 'ingen i flash' : `0x${d.capFlash.toString(16)} (${d.capUsed ? 'i bruk' : 'ikke i bruk'})`]);
+    rows.push(['Kjører fra', `0x${d.runningFrom.toString(16).padStart(5, '0')}`]);
+    rows.push(['OTA-vindu', d.otaBusy ? 'OTA pågår' : d.otaMinutesLeft ? `åpent, ${d.otaMinutesLeft} min igjen` : 'stengt']);
+  }
   if (state.histInfo) {
     const i = state.histInfo;
     rows.push(['Historikk', `time ${i.oldest} til ${i.next - 1}, siste lagret for ${Math.round(i.secsSinceLast / 60)} min siden`]);
@@ -182,7 +188,7 @@ async function connect() {
       // Windows husker gjerne gammelt navn for samme MAC (0.4: "Doegngrader"),
       // derfor også eldre navn og produsentdata (firma-ID 0xFFFF) som filter.
       filters: [{ namePrefix: 'DG-' }, { namePrefix: 'Doegngrader' }, { manufacturerData: [{ companyIdentifier: 0xffff }] }],
-      optionalServices: [P.UUID.service, 'device_information'],
+      optionalServices: [P.UUID.service, 'device_information', P.OTA_SERVICE],
     });
     state.device = device;
     device.removeEventListener('gattserverdisconnected', onDisconnected);
@@ -198,6 +204,16 @@ async function connect() {
       state.fw = dec.decode(await (await dis.getCharacteristic('firmware_revision_string')).readValue());
       state.model = dec.decode(await (await dis.getCharacteristic('model_number_string')).readValue());
     } catch (e) { log(`Enhetsinfo: ${e.message}`); }
+    try {
+      state.chars.diag = await svc.getCharacteristic(P.DIAG_UUID);
+      state.diag = P.parseDiag(await state.chars.diag.readValue());
+      log(`Diagnose: kalibrering ${state.diag.capFlash === null ? 'ingen' : '0x' + state.diag.capFlash.toString(16)}, OTA-vindu ${state.diag.otaMinutesLeft} min`);
+    } catch (e) { state.chars.diag = null; state.diag = null; log('Diagnose finnes ikke (firmware før 0.5.1)'); }
+    try {
+      const ota = await server.getPrimaryService(P.OTA_SERVICE);
+      state.chars.ota = await ota.getCharacteristic(P.OTA_CHAR);
+    } catch (e) { state.chars.ota = null; }
+    updateOtaButton();
     state.chars.status.addEventListener('characteristicvaluechanged', (ev) => onStatus(ev.target.value));
     onStatus(await state.chars.status.readValue());
     await state.chars.status.startNotifications();
@@ -214,6 +230,8 @@ async function connect() {
 
 function onDisconnected() {
   log('Frakoblet');
+  state.otaDisconnected = true;
+  updateOtaButton();
   setConn(state.status ? `Frakoblet. Sist lest ${state.statusAt.toLocaleTimeString('nb-NO')}` : 'Ikke tilkoblet');
   $('btn-hist').disabled = true;
   $('btn-connect').textContent = 'Koble til igjen';
@@ -281,6 +299,79 @@ function downloadCsv() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// ---------- OTA ----------
+function updateOtaButton() {
+  const connected = !!(state.device && state.device.gatt && state.device.gatt.connected);
+  $('btn-ota').disabled = !(connected && state.chars.ota && $('ota-file').files.length && !state.otaRunning);
+  if (connected && !state.chars.ota) $('ota-status').textContent = 'Måleren har ikke OTA. Den må ha firmware 0.5.1 eller nyere, flashet over UART første gang.';
+}
+
+async function runOta() {
+  const st = $('ota-status');
+  const bar = $('ota-progress');
+  let fw;
+  try {
+    fw = new Uint8Array(await $('ota-file').files[0].arrayBuffer());
+    const info = P.validateFirmware(fw);
+    log(`OTA: fil OK, ${info.size} byte, ${info.packets} pakker`);
+  } catch (e) { st.textContent = `Fila kan ikke brukes: ${e.message}`; return; }
+
+  if (state.chars.diag) {
+    state.diag = P.parseDiag(await state.chars.diag.readValue());
+    renderDebug();
+    if (!state.diag.otaMinutesLeft && !state.diag.otaBusy) {
+      st.textContent = 'OTA-vinduet er stengt. Ta ut batteriet, sett det inn igjen og koble til innen 3 minutter.';
+      return;
+    }
+  }
+
+  const ch = state.chars.ota;
+  const n = Math.ceil(fw.length / 16);
+  state.otaRunning = true;
+  state.otaDisconnected = false;
+  updateOtaButton();
+  bar.hidden = false; bar.max = n; bar.value = 0;
+  let result = null;
+  const onNotify = (ev) => {
+    const r = P.parseOtaNotify(ev.target.value);
+    log(`OTA-varsling: ${r.type === 'result' ? r.text : r.hex}`);
+    if (r.type === 'result') result = r;
+  };
+  ch.addEventListener('characteristicvaluechanged', onNotify);
+  const t0 = Date.now();
+  try {
+    await ch.startNotifications();
+    await ch.writeValueWithoutResponse(P.OTA_CMD_START);
+    for (let i = 0; i < n; i++) {
+      if (result && result.code !== 0) throw new Error(result.text);
+      await ch.writeValueWithoutResponse(P.otaPacket(fw, i));
+      if (i % 8 === 7) {
+        await ch.readValue();   // venter til måleren har tatt imot (flytkontroll)
+        bar.value = i + 1;
+        st.textContent = `Sender ${Math.round(((i + 1) / n) * 100)} % (${i + 1} av ${n} pakker)`;
+      }
+    }
+    await ch.readValue();
+    await ch.writeValueWithoutResponse(P.otaEndCmd(n - 1));
+    bar.value = n;
+    st.textContent = 'Alt sendt. Venter på svar fra måleren…';
+    for (let k = 0; k < 100 && !result && !state.otaDisconnected; k++) await new Promise((r) => setTimeout(r, 100));
+    const secs = Math.round((Date.now() - t0) / 1000);
+    if (result && result.code !== 0) throw new Error(result.text);
+    st.textContent = result
+      ? `Ferdig på ${secs} s. Måleren starter på nytt med ny firmware. Koble til igjen om et halvt minutt og sjekk versjonen.`
+      : `Sendt på ${secs} s, men måleren svarte ikke. Den kan ha startet på nytt. Koble til igjen og sjekk versjonen.`;
+    log(`OTA ferdig: ${result ? result.text : 'ingen svar'}`);
+  } catch (e) {
+    st.textContent = `Oppdatering feilet: ${e.message}. Den gamle firmwaren er fortsatt i bruk.`;
+    log(`OTA feilet: ${e.message}`);
+  } finally {
+    ch.removeEventListener('characteristicvaluechanged', onNotify);
+    state.otaRunning = false;
+    updateOtaButton();
+  }
+}
+
 // ---------- demo (?demo) ----------
 function demoConnect() {
   state.device = { name: 'DG-DEMO', gatt: { connected: true } };
@@ -323,6 +414,8 @@ function init() {
   });
   $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);
+  $('btn-ota').addEventListener('click', runOta);
+  $('ota-file').addEventListener('change', updateOtaButton);
   let rt;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { drawScale(state.status ? state.status.dg : null); renderChart(); }, 150); });
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

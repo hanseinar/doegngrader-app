@@ -1,5 +1,5 @@
 // sw.js - gjør siden tilgjengelig uten nett (kjølerom og låve har ofte dårlig dekning)
-const CACHE = 'dg-v1';
+const CACHE = 'dg-v2';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'protocol.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {

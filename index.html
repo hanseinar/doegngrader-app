@@ -47,6 +47,14 @@
   <details class="debug">
     <summary>Feilsøking</summary>
     <dl id="debug-list"></dl>
+    <h3>Oppdater firmware</h3>
+    <p class="muted" id="ota-help">Ta ut batteriet og sett det inn igjen. Koble til innen 3 minutter, velg fila <code>doegngrader.bin</code> fra <code>firmware\bin</code> og trykk Oppdater.</p>
+    <div class="ota">
+      <input type="file" id="ota-file" accept=".bin">
+      <button id="btn-ota" disabled>Oppdater</button>
+    </div>
+    <progress id="ota-progress" max="1" value="0" hidden></progress>
+    <p id="ota-status" role="status"></p>
     <h3>Logg</h3>
     <pre id="log"></pre>
   </details>
