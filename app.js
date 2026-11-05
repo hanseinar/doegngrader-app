@@ -179,7 +179,9 @@ async function connect() {
   try {
     warn('');
     const device = state.device && !state.device.gatt.connected ? state.device : await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'DG-' }],
+      // Windows husker gjerne gammelt navn for samme MAC (0.4: "Doegngrader"),
+      // derfor også eldre navn og produsentdata (firma-ID 0xFFFF) som filter.
+      filters: [{ namePrefix: 'DG-' }, { namePrefix: 'Doegngrader' }, { manufacturerData: [{ companyIdentifier: 0xffff }] }],
       optionalServices: [P.UUID.service, 'device_information'],
     });
     state.device = device;
