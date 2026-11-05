@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1f2e29"/>
+  <rect x="72" y="300" width="368" height="56" fill="#3a4a44"/>
+  <rect x="72" y="300" width="250" height="56" fill="#c8384a"/>
+  <g stroke="#eceee8" stroke-width="10">
+    <line x1="72" y1="356" x2="72" y2="410"/>
+    <line x1="164" y1="356" x2="164" y2="390"/>
+    <line x1="256" y1="356" x2="256" y2="410"/>
+    <line x1="348" y1="356" x2="348" y2="390"/>
+    <line x1="440" y1="356" x2="440" y2="410"/>
+  </g>
+  <text x="72" y="250" font-family="Bahnschrift, DIN Alternate, Arial Narrow, sans-serif" font-weight="700" font-size="190" fill="#eceee8">DG</text>
+</svg>

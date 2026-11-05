@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Døgngrader</title>
+<meta name="description" content="Les av døgngrader-måleren over Bluetooth.">
+<meta name="theme-color" content="#1f2e29">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="top">
+  <h1 class="brand">Døgngrader</h1>
+  <p class="conn" id="conn" role="status">Ikke tilkoblet</p>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="dg-label">
+    <p class="dg"><span id="dg-value">–</span><span class="unit" id="dg-label">døgngrader</span></p>
+    <svg class="scale" id="scale" viewBox="0 0 360 64" height="64" role="img" aria-label="Døgngrader på skala fra 0 til 60"></svg>
+    <p class="hero-note" id="hero-note">Koble til måleren for å lese av.</p>
+  </section>
+
+  <section class="readings" aria-label="Målinger nå">
+    <div><span class="r-val" id="temp">–</span><span class="r-lbl">temperatur</span></div>
+    <div><span class="r-val" id="rh">–</span><span class="r-lbl">fuktighet</span></div>
+    <div><span class="r-val" id="bat">–</span><span class="r-lbl">batteri</span></div>
+  </section>
+
+  <p class="warn" id="warn" hidden></p>
+
+  <div class="actions">
+    <button id="btn-connect" class="primary">Koble til måler</button>
+    <button id="btn-hist" disabled>Hent historikk</button>
+    <button id="btn-csv" disabled>Last ned CSV</button>
+  </div>
+
+  <section class="history" aria-labelledby="hist-h">
+    <h2 id="hist-h">Temperatur per time</h2>
+    <p class="muted" id="hist-note">Historikken hentes fra måleren. Den holder ca. 42 døgn.</p>
+    <svg class="chart" id="chart" viewBox="0 0 360 240" height="240" role="img" aria-label="Graf over temperatur per time"></svg>
+  </section>
+
+  <details class="debug">
+    <summary>Feilsøking</summary>
+    <dl id="debug-list"></dl>
+    <h3>Logg</h3>
+    <pre id="log"></pre>
+  </details>
+
+  <p class="nosupport" id="nosupport" hidden>
+    Denne nettleseren kan ikke bruke Bluetooth. Bruk Chrome eller Edge på Android, Windows eller Mac.
+    På iPhone og iPad: bruk appen Bluefy.
+  </p>
+</main>
+
+<footer class="foot">
+  <p>Måleren kobler fra av seg selv etter 5 minutter for å spare batteri. <a href="?demo">Se demo uten måler</a></p>
+</footer>
+</body>
+</html>

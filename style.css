@@ -1,0 +1,133 @@
+/* Døgngrader – nettside for avlesing av måleren.
+ * Uttrykk: måleinstrument i kjølerom. Kald, lys flate, mørk granfarge,
+ * kjøttrød bare for fremdriften mot målet. Tall i smal, teknisk skrift. */
+
+:root {
+  --bone: #eceee8;        /* flate */
+  --ink: #1f2e29;         /* tekst, mørk gran */
+  --muted: #66746e;       /* hjelpetekst */
+  --line: #c7cdc6;        /* skillelinjer, skala */
+  --meat: #9e2433;        /* fremdrift */
+  --cold: #2f6585;        /* temperatur */
+  --frost: #dfe6e6;       /* kalde felt */
+  --font: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bone: #18211e;
+    --ink: #e4e9e3;
+    --muted: #93a19a;
+    --line: #34413c;
+    --meat: #e0566a;
+    --cold: #7fb3d3;
+    --frost: #22302c;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bone);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+main, .top, .foot {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+.brand { font-size: 1rem; font-weight: 600; margin: 0; letter-spacing: .02em; }
+.conn { margin: 0; color: var(--muted); font-size: .95rem; text-align: right; }
+.conn.on { color: var(--ink); }
+.conn.on::before { content: ""; display: inline-block; width: .55em; height: .55em; border-radius: 50%; background: var(--meat); margin-right: .45em; vertical-align: .1em; }
+
+.hero { padding: 1.5rem 0 .5rem; }
+.dg {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  flex-wrap: wrap;
+  line-height: .9;
+}
+#dg-value { font-size: clamp(5rem, 24vw, 9rem); font-weight: 700; letter-spacing: -.03em; font-stretch: condensed; }
+.unit { font-size: 1.25rem; color: var(--muted); }
+.scale { width: 100%; display: block; margin-top: 1rem; overflow: visible; }
+.scale text { font-family: var(--font); font-size: 15px; fill: var(--muted); }
+.scale .tick { stroke: var(--line); stroke-width: 1.5; }
+.scale .tick.major { stroke: var(--ink); }
+.scale .tick:has(+ text.target) { stroke: var(--meat); stroke-width: 3; }
+.scale .track { fill: var(--frost); }
+.scale .fill { fill: var(--meat); }
+.scale text.target { fill: var(--meat); font-weight: 600; }
+.hero-note { margin: .5rem 0 0; font-size: 1.15rem; }
+
+.readings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  margin-top: 1.5rem;
+}
+.readings > div { padding: .8rem 0 .8rem; display: flex; flex-direction: column; }
+.readings > div + div { padding-left: .9rem; border-left: 1px solid var(--line); }
+.r-val { font-size: clamp(1.6rem, 7vw, 2.2rem); font-weight: 600; }
+.r-lbl { color: var(--muted); font-size: .95rem; }
+
+.warn { background: var(--meat); color: #fff; padding: .7rem .9rem; margin: 1rem 0 0; border-radius: 3px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.5rem 0; }
+button {
+  font: inherit;
+  font-size: 1.05rem;
+  min-height: 3.25rem;
+  padding: 0 1.2rem;
+  border-radius: 3px;
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+button.primary { background: var(--ink); color: var(--bone); flex: 1 1 100%; }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid var(--cold); outline-offset: 2px; }
+
+.history h2 { font-size: 1.15rem; margin: 2rem 0 .2rem; }
+.muted { color: var(--muted); margin: 0 0 .5rem; font-size: .95rem; }
+.chart { width: 100%; display: block; }
+.chart text { font-family: var(--font); font-size: 13px; fill: var(--muted); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .zero { stroke: var(--ink); stroke-width: 1.5; }
+.chart .warmarea { fill: var(--meat); opacity: .14; }
+.chart .temp { fill: none; stroke: var(--cold); stroke-width: 2.25; stroke-linejoin: round; }
+.chart .mark { stroke: var(--meat); stroke-width: 1.5; stroke-dasharray: 3 3; }
+
+.debug { margin: 2rem 0 1rem; border-top: 1px solid var(--line); padding-top: .6rem; }
+.debug summary { cursor: pointer; min-height: 2.5rem; display: flex; align-items: center; }
+.debug dl { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; font-size: .95rem; }
+.debug dt { color: var(--muted); }
+.debug dd { margin: 0; overflow-wrap: anywhere; }
+.debug h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
+#log { font-size: .8rem; white-space: pre-wrap; max-height: 16rem; overflow: auto; background: var(--frost); padding: .6rem; margin: 0; }
+
+.nosupport { border-left: 4px solid var(--meat); padding-left: .8rem; }
+.foot { color: var(--muted); font-size: .9rem; padding-bottom: 2rem; }
+.foot a { color: inherit; }
+
+@media (min-width: 40rem) {
+  button.primary { flex: 0 1 auto; }
+}
