@@ -95,6 +95,8 @@ export function periodStartMs(info, readAtMs) {
 // ---------- innstillinger (fra 0.5.5) ----------
 export const SET_SERVICE = 'd6a10007' + UUID_BASE;
 export const SET_CHAR = 'd6a10008' + UUID_BASE;
+export const CMD_CHAR = 'd6a10009' + UUID_BASE;   // fra 0.5.8
+export const CMD_OTA_OPEN = 0x01;
 export const SET_LIMITS = { dg: [1, 999], days: [1, 99] };
 export const USE_CODES = ['vilt', 'restaurant'];
 

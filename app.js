@@ -531,7 +531,8 @@ async function connect() {
     try {
       const set = await server.getPrimaryService(P.SET_SERVICE);
       state.chars.set = await set.getCharacteristic(P.SET_CHAR);
-    } catch (e) { state.chars.set = null; }
+      try { state.chars.cmd = await set.getCharacteristic(P.CMD_CHAR); } catch (e) { state.chars.cmd = null; }
+    } catch (e) { state.chars.set = null; state.chars.cmd = null; }
     state.chars.status.addEventListener('characteristicvaluechanged', (ev) => onStatus(ev.target.value));
     onStatus(await state.chars.status.readValue());
     await state.chars.status.startNotifications();
@@ -802,6 +803,12 @@ function updateOtaButton() {
     el.textContent = t('ota.latestMissing');
   }
   $('btn-ota-latest').hidden = !state.latest;
+  // oppdateringsvinduet
+  const d = state.diag, win = $('ota-win');
+  if (!connected() || !d) win.textContent = '';
+  else if (d.otaMinutesLeft || d.otaBusy) win.textContent = t('ota.winOpen', { min: d.otaMinutesLeft });
+  else win.textContent = state.chars.cmd ? t('ota.winClosed') : t('ota.winOld');
+  $('btn-ota-open').hidden = !(connected() && state.chars.cmd && d && !d.otaMinutesLeft && !d.otaBusy);
   if (connected() && !state.chars.ota && !state.demo) $('ota-status').textContent = t('ota.noOta');
 }
 
@@ -876,7 +883,9 @@ async function runOta(source) {
 function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.5.6';
+  state.fw = '0.5.8';
+  state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
+  state.chars.cmd = { async writeValueWithResponse() { state.diag.otaMinutesLeft = 3; } };
   state.model = 'LYWSD03MMC B1.1';
   // innstillinger i «måleren», samme bytes som firmwaren
   let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy });
@@ -887,7 +896,7 @@ function demoConnect() {
   demoHistory(false);
   const b = new Uint8Array(21), v = new DataView(b.buffer);
   const sum = Math.round(L.dgFromRecords(L.currentPeriod(state.history, state.histInfo.psHour).records) * 28800);
-  v.setUint8(0, 1); v.setUint8(1, 0x56); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
+  v.setUint8(0, 1); v.setUint8(1, 0x58); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
   v.setUint8(6, 82); v.setUint16(7, 2931, true); v.setUint8(9, 61); v.setUint32(10, sum, true);
   v.setUint16(14, 14, true); v.setUint16(16, 7843, true); v.setUint16(18, 47012, true);
   renderConn('on');
@@ -954,6 +963,16 @@ function init() {
   $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);
   $('btn-ota').addEventListener('click', () => runOta('file'));
+  $('btn-ota-open').addEventListener('click', async () => {
+    try {
+      await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_OTA_OPEN]));
+      await new Promise((r) => setTimeout(r, 400));   // måleren utfører kommandoen i neste runde
+      if (state.chars.diag) state.diag = P.parseDiag(await state.chars.diag.readValue());
+      log('Oppdateringsvinduet åpnet fra appen');
+    } catch (e) { log(`Åpne vindu feilet: ${e.message}`); }
+    updateOtaButton();
+    renderDebug();
+  });
   $('btn-ota-latest').addEventListener('click', () => runOta('latest'));
   $('ota-file').addEventListener('change', updateOtaButton);
 
