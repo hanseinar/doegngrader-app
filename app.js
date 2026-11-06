@@ -250,6 +250,13 @@ function period() {
   return { ...p, hours, start };
 }
 
+// Råd -> kapittel i læreboka (laerebok/index.html)
+const BOOK_ANCHOR = {
+  'adv.v.coldShort': 'forste', 'adv.v.flies': 'fluer', 'adv.v.avg15': 'temp', 'adv.v.avg10': 'temp',
+  'adv.v.condense': 'fukt', 'adv.v.done': 'lengde', 'adv.frost': 'dg',
+  'adv.r.warm': 'restaurant', 'adv.r.wet': 'restaurant', 'adv.r.dry': 'restaurant',
+};
+
 // ---------- visning ----------
 function render() {
   applyTexts();
@@ -308,6 +315,16 @@ function render() {
       const li = document.createElement('li');
       li.className = a.level;
       li.textContent = t(a.key, fmtVars(a.vars));
+      const anchor = BOOK_ANCHOR[a.key];
+      if (anchor) {
+        const link = document.createElement('a');
+        link.href = `laerebok/?lang=${settings.lang}#${anchor}`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'more';
+        link.textContent = t('adv.more');
+        li.append(' ', link);
+      }
       ul.appendChild(li);
     }
   }

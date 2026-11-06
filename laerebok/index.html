@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lærebok: modning av kjøtt</title>
+<meta name="description" content="Døgngrader, temperatur, fuktighet og modning av vilt og storfe, med kilder.">
+<style>
+  :root { --bg: #f7f5f0; --ink: #1d1b18; --muted: #6a645b; --edge: #ddd6ca; --accent: #8a5a12; --bad: #b8261b; --panel: #fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #171512; --ink: #ece6dc; --muted: #a69e92; --edge: #34302a; --accent: #e7b04a; --bad: #e0655a; --panel: #1f1c18; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 Georgia, "Times New Roman", serif; }
+  .wrap { max-width: 42rem; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  nav.top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font: 15px/1.4 system-ui, sans-serif; padding: .5rem 0 1rem; border-bottom: 1px solid var(--edge); }
+  nav.top a, nav.top button { color: var(--accent); background: none; border: 1px solid var(--edge); border-radius: 999px; padding: .35rem .9rem; font: inherit; cursor: pointer; text-decoration: none; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 1.4rem 0 .4rem; }
+  h2 { font-size: 1.35rem; margin: 2.2rem 0 .5rem; scroll-margin-top: 1rem; }
+  h2 .no { color: var(--accent); margin-right: .4rem; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  .toc { font: 15px/1.5 system-ui, sans-serif; background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; padding: .8rem 1rem .8rem 2.2rem; }
+  .toc a { color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; font: 15px/1.45 system-ui, sans-serif; margin: .6rem 0 1rem; }
+  th, td { text-align: left; vertical-align: top; padding: .4rem .5rem .4rem 0; border-bottom: 1px solid var(--edge); }
+  th { color: var(--muted); font-weight: 600; }
+  .src { font: 13px/1.4 system-ui, sans-serif; color: var(--muted); }
+  .box { border-left: 3px solid var(--accent); background: var(--panel); padding: .6rem 1rem; border-radius: 0 10px 10px 0; margin: 1rem 0; }
+  .box.warn { border-color: var(--bad); }
+  .calc { font: 15px/1.5 system-ui, sans-serif; background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; padding: .8rem 1rem; }
+  .calc input { width: 5rem; font: inherit; padding: .2rem .4rem; border: 1px solid var(--edge); border-radius: 6px; background: var(--bg); color: var(--ink); }
+  .calc output { font-weight: 700; }
+  ol.refs { font: 14px/1.45 system-ui, sans-serif; padding-left: 1.4rem; }
+  ol.refs a { color: var(--accent); overflow-wrap: anywhere; }
+  footer { margin-top: 3rem; font: 13px system-ui, sans-serif; color: var(--muted); }
+  [data-lang] { display: none; }
+  html[lang="nb"] [data-lang="nb"], html[lang="en"] [data-lang="en"] { display: block; }
+  :target { animation: hl 2s; }
+  @keyframes hl { from { background: color-mix(in srgb, var(--accent) 25%, transparent); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="top"><a href="../" id="back">← Appen</a><button type="button" id="lang-btn">English</button></nav>
+
+<!-- ================= NORSK ================= -->
+<article data-lang="nb">
+<h1>Modning av kjøtt</h1>
+<p class="lead">Døgngrader, temperatur og fuktighet for vilt og storfe. Hvert tall har en kilde. Der kildene er uenige, står det. Versjon 1, november 2026.</p>
+
+<ol class="toc">
+  <li><a href="#dg">Hva er døgngrader?</a></li>
+  <li><a href="#morning">Hva skjer når kjøtt modner?</a></li>
+  <li><a href="#temp">Temperatur, fase for fase</a></li>
+  <li><a href="#forste">Det første døgnet</a></li>
+  <li><a href="#fluer">Spyfluer og varme dager</a></li>
+  <li><a href="#fukt">Fuktighet, kondens og duggpunkt</a></li>
+  <li><a href="#lengde">Hvor lenge?</a></li>
+  <li><a href="#restaurant">Tørrmodning i restaurant og kjølerom</a></li>
+  <li><a href="#maleren">Hva måleren kan og ikke kan</a></li>
+  <li><a href="#kilder">Kilder</a></li>
+</ol>
+
+<h2 id="dg"><span class="no">1</span>Hva er døgngrader?</h2>
+<p>Døgngrader er snittemperaturen per døgn, lagt sammen. Ett døgn ved 5 °C gir 5 døgngrader. Fire døgn ved 10 °C gir 40. Minusgrader teller ikke, fordi modningen nesten stopper når kjøttet fryser.</p>
+<p>Poenget er at varme og tid kan bytte plass. Kjøtt som henger kaldt, trenger flere dager for å nå samme modning som kjøtt som henger litt varmere.</p>
+<div class="calc" id="calc-dg">
+  <label>Snittemperatur <input type="number" id="c-t" value="6" step="0.5"> °C</label> &nbsp;
+  <label>Mål <input type="number" id="c-dg" value="40" step="1"> døgngrader</label><br>
+  Det tar <output id="c-out"></output> døgn.
+</div>
+<p>Måleren regner ut døgngradene selv: den måler temperaturen hvert 5. minutt og legger til en 288-del av temperaturen hver gang.</p>
+
+<h2 id="morning"><span class="no">2</span>Hva skjer når kjøtt modner?</h2>
+<p>Etter slakt stivner musklene (dødsstivhet). Etter 12 til 24 timer slipper stivheten. Deretter bryter kjøttets egne enzymer ned strukturer i muskelfibrene, og kjøttet blir mørere. Hvor raskt dette går, avhenger av temperaturen. Det er derfor døgngrader brukes.</p>
+
+<h2 id="temp"><span class="no">3</span>Temperatur, fase for fase</h2>
+<table>
+  <tr><th>Fase</th><th>Temperatur</th><th>Kilde</th></tr>
+  <tr><td>Første døgn, til stivheten slipper</td><td>Ikke under 12 °C</td><td>Hjortesenteret</td></tr>
+  <tr><td>Etter første døgn, ideelt</td><td>8 til 10 °C (gir 4 til 5 dagers modning)</td><td>Hjortesenteret</td></tr>
+  <tr><td>Henging generelt</td><td>2 til 10 °C, 2 til 4 °C optimalt. Over 10 °C kan kjøttet surne etter en dag eller to</td><td>Kammeret</td></tr>
+  <tr><td>Garasje uten kjøling</td><td>Går greit når døgnsnittet er under 15 °C</td><td>Kammeret (forumbruker)</td></tr>
+  <tr><td>Tørrmodning av storfe</td><td>0 til 4 °C</td><td>MLA, Beef Research</td></tr>
+</table>
+
+<h2 id="forste"><span class="no">4</span>Det første døgnet</h2>
+<p>Kjøles kjøttet for raskt mens stivheten ennå sitter, kan muskelfibrene trekke seg sammen (kuldeforkorting). Da blir kjøttet seigt, og det hjelper lite å henge det lenger. Hjortesenteret anbefaler derfor ikke under 12 °C det første døgnet.</p>
+<div class="box warn"><b>Kildene er uenige her.</b> Mattilsynet legger vekt på rask nedkjøling for å holde bakterievekst nede. Begge hensyn er reelle. Appen viser dette som et råd, ikke som en regel.</div>
+
+<h2 id="fluer"><span class="no">5</span>Spyfluer og varme dager</h2>
+<p>20 °C er i prinsippet greit for et rent slakt i skygge og god luft, men spyflueegg klekker på ett døgn ved den temperaturen. En tørr hinne på overflaten beskytter, fordi fluene trenger fukt for eggene. Appen varsler fra 15 °C.</p>
+
+<h2 id="fukt"><span class="no">6</span>Fuktighet, kondens og duggpunkt</h2>
+<p>Ingen av kildene gir et tallfestet fuktighetsområde for henging av hjortevilt. Rådene er praktiske: hold kjøttet tørt, sørg for luft rundt skrotten, ikke heng dyr inntil hverandre. Kondens og fukt er et kjent problem i kjøleskap og kjølehjørner, og mange setter inn avfukter eller vifte.</p>
+<p><b>Duggpunktet</b> er temperaturen der lufta blir mettet og vann begynner å felles ut. Er lufta 8 °C og 90 % fuktig, er duggpunktet rundt 6,5 °C. Kaldere flater enn det, for eksempel kjøtt som er kaldere enn lufta, blir våte. Appen viser duggpunktet i Avansert og varsler fra 90 % fuktighet.</p>
+<div class="calc" id="calc-dew">
+  <label>Luft <input type="number" id="d-t" value="8" step="0.5"> °C</label> &nbsp;
+  <label>Fuktighet <input type="number" id="d-rh" value="90" step="1"> %</label><br>
+  Duggpunkt: <output id="d-out"></output>
+</div>
+
+<h2 id="lengde"><span class="no">7</span>Hvor lenge?</h2>
+<ul>
+  <li>40 til 50 døgngrader er vanlig for hjortevilt. 40 er normalt mer enn nok for kalv.</li>
+  <li>Gammel bukk eller storokse: gjerne 60 til 120 døgngrader. Det forutsetter et rent slakt og erfaring.</li>
+  <li>40 er et utgangspunkt, ikke en grense.</li>
+</ul>
+<p class="src">Kilde: Norsk Hjortesenter. Kammeret bruker 40 døgngrader som prinsipp.</p>
+
+<h2 id="restaurant"><span class="no">8</span>Tørrmodning i restaurant og kjølerom</h2>
+<table>
+  <tr><th>Faktor</th><th>Verdi</th><th>Kilde</th></tr>
+  <tr><td>Temperatur</td><td>0 til 4 °C, gjerne rundt 0 °C ved lang modning</td><td>MLA, Beef Research</td></tr>
+  <tr><td>Fuktighet</td><td>75 til 85 %. For høy gir bakterievekst og bismak, for lav gir mer svinn</td><td>MLA, Beef Research</td></tr>
+  <tr><td>Luft</td><td>0,2 til 0,5 m/s, jevnt</td><td>MLA</td></tr>
+  <tr><td>Tid</td><td>Vanligvis 14 til 35 dager</td><td>Beef Research</td></tr>
+  <tr><td>Svinn</td><td>3 til 5 % etter 14 dager, 4,5 til 6,5 % etter 21 dager, i tillegg avskjær. Andre målinger: 6,5 % og 10,2 %, avskjær opptil 17,9 %</td><td>Beef Research (Parrish 1991, Ahnström 2006)</td></tr>
+</table>
+<p>Ved jevn temperatur følger dager og døgngrader hverandre: 28 dager ved 2 °C er 56 døgngrader. Når temperaturen svinger, for eksempel ved døråpning eller avriming, sier døgngradene mer. Appen lar restauranten velge hva smilefjeset skal følge.</p>
+
+<h2 id="maleren"><span class="no">9</span>Hva måleren kan og ikke kan</h2>
+<p>Måleren måler lufta der den henger, ikke temperaturen inne i kjøttet. Heng den i samme høyde som kjøttet, ute av sol og trekk. Fordelen er at den følger kjøttet, ikke skapet: den kan henge i garasjen, flyttes til kjølerommet og nullstilles med en binders.</p>
+
+<h2 id="kilder"><span class="no">10</span>Kilder</h2>
+<ol class="refs">
+  <li>Norsk Hjortesenter (Johan Trygve Solheim): «Fakta om slaktebehandling og mørning av hjortevilt».</li>
+  <li>Kammeret.no: «Mørningsguide» (2020), «Vilt kjøle(skap)» (2024 til 2025), «Viltkjøleskap» (2020 til 2024).</li>
+  <li>MeatEater: «How to Dry Age Meat» (2024).</li>
+  <li>MLA: Dry aged beef food safety. <a href="https://www.mla.com.au/contentassets/f7423b3de0fa4865bfb1f8a470742e78/dry_aged_food_safety_brochure.pdf">mla.com.au</a></li>
+  <li>Beef Research: Dry Aging of Beef (2020). <a href="https://beefresearch.org/media/beefresearch/docs/dry_aging_of_beef_08-20-2020-28.pdf">beefresearch.org</a></li>
+</ol>
+</article>
+
+<!-- ================= ENGLISH ================= -->
+<article data-lang="en">
+<h1>Ageing meat</h1>
+<p class="lead">Degree days, temperature and humidity for game and beef. Every figure has a source. Where sources disagree, it says so. Version 1, November 2026.</p>
+
+<ol class="toc">
+  <li><a href="#dg">What are degree days?</a></li>
+  <li><a href="#morning">What happens when meat ages?</a></li>
+  <li><a href="#temp">Temperature, phase by phase</a></li>
+  <li><a href="#forste">The first day</a></li>
+  <li><a href="#fluer">Blowflies and warm days</a></li>
+  <li><a href="#fukt">Humidity, condensation and dew point</a></li>
+  <li><a href="#lengde">How long?</a></li>
+  <li><a href="#restaurant">Dry ageing in restaurants and cold rooms</a></li>
+  <li><a href="#maleren">What the sensor can and cannot do</a></li>
+  <li><a href="#kilder">Sources</a></li>
+</ol>
+
+<h2 id="dg-en"><span class="no">1</span>What are degree days?</h2>
+<p>Degree days are the average temperature per day, added up. One day at 5 °C gives 5 degree days. Four days at 10 °C give 40. Sub-zero does not count, because ageing almost stops when the meat freezes.</p>
+<p>The point is that warmth and time can be traded. Meat hanging cold needs more days to reach the same ageing as meat hanging a little warmer.</p>
+<div class="calc">
+  <label>Average temperature <input type="number" data-sync="c-t" value="6" step="0.5"> °C</label> &nbsp;
+  <label>Target <input type="number" data-sync="c-dg" value="40" step="1"> degree days</label><br>
+  It takes <output data-out="c-out"></output> days.
+</div>
+<p>The sensor calculates degree days itself: it measures the temperature every 5 minutes and adds 1/288 of it each time.</p>
+
+<h2 id="morning-en"><span class="no">2</span>What happens when meat ages?</h2>
+<p>After slaughter the muscles stiffen (rigor mortis). After 12 to 24 hours the stiffness releases. Then the meat's own enzymes break down structures in the muscle fibres, and the meat becomes more tender. How fast this goes depends on the temperature. That is why degree days are used.</p>
+
+<h2 id="temp-en"><span class="no">3</span>Temperature, phase by phase</h2>
+<table>
+  <tr><th>Phase</th><th>Temperature</th><th>Source</th></tr>
+  <tr><td>First day, until rigor releases</td><td>Not below 12 °C</td><td>Norwegian Deer Centre</td></tr>
+  <tr><td>After the first day, ideal</td><td>8 to 10 °C (4 to 5 days of ageing)</td><td>Norwegian Deer Centre</td></tr>
+  <tr><td>Hanging in general</td><td>2 to 10 °C, 2 to 4 °C optimal. Above 10 °C the meat may sour after a day or two</td><td>Kammeret</td></tr>
+  <tr><td>Garage without cooling</td><td>Works while the daily average is below 15 °C</td><td>Kammeret (forum user)</td></tr>
+  <tr><td>Dry ageing beef</td><td>0 to 4 °C</td><td>MLA, Beef Research</td></tr>
+</table>
+
+<h2 id="forste-en"><span class="no">4</span>The first day</h2>
+<p>If the meat is chilled too fast while rigor is still present, the muscle fibres can contract (cold shortening). The meat becomes tough, and longer hanging helps little. The Norwegian Deer Centre therefore recommends not below 12 °C during the first day.</p>
+<div class="box warn"><b>Sources disagree here.</b> The Norwegian Food Safety Authority stresses fast chilling to limit bacterial growth. Both concerns are real. The app shows this as advice, not as a rule.</div>
+
+<h2 id="fluer-en"><span class="no">5</span>Blowflies and warm days</h2>
+<p>20 °C is in principle fine for a clean carcass in shade with good air, but blowfly eggs hatch within a day at that temperature. A dry film on the surface protects, because the flies need moisture for the eggs. The app warns from 15 °C.</p>
+
+<h2 id="fukt-en"><span class="no">6</span>Humidity, condensation and dew point</h2>
+<p>None of the sources gives a numeric humidity range for hanging deer. The advice is practical: keep the meat dry, keep air moving around the carcass, do not hang animals touching each other. Condensation and damp are known problems in fridges and cold corners, and many add a dehumidifier or a fan.</p>
+<p>The <b>dew point</b> is the temperature at which air becomes saturated and water starts to condense. At 8 °C and 90 % humidity the dew point is about 6.5 °C. Colder surfaces, such as meat colder than the air, get wet. The app shows the dew point in Advanced and warns from 90 % humidity.</p>
+<div class="calc">
+  <label>Air <input type="number" data-sync="d-t" value="8" step="0.5"> °C</label> &nbsp;
+  <label>Humidity <input type="number" data-sync="d-rh" value="90" step="1"> %</label><br>
+  Dew point: <output data-out="d-out"></output>
+</div>
+
+<h2 id="lengde-en"><span class="no">7</span>How long?</h2>
+<ul>
+  <li>40 to 50 degree days is usual for deer. 40 is normally more than enough for a calf.</li>
+  <li>Old stag or bull: often 60 to 120 degree days. This assumes a clean carcass and experience.</li>
+  <li>40 is a starting point, not a limit.</li>
+</ul>
+<p class="src">Source: Norwegian Deer Centre. Kammeret uses 40 degree days as a principle.</p>
+
+<h2 id="restaurant-en"><span class="no">8</span>Dry ageing in restaurants and cold rooms</h2>
+<table>
+  <tr><th>Factor</th><th>Value</th><th>Source</th></tr>
+  <tr><td>Temperature</td><td>0 to 4 °C, often around 0 °C for long ageing</td><td>MLA, Beef Research</td></tr>
+  <tr><td>Humidity</td><td>75 to 85 %. Too high gives bacterial growth and off-flavours, too low gives more weight loss</td><td>MLA, Beef Research</td></tr>
+  <tr><td>Air</td><td>0.2 to 0.5 m/s, even</td><td>MLA</td></tr>
+  <tr><td>Time</td><td>Usually 14 to 35 days</td><td>Beef Research</td></tr>
+  <tr><td>Weight loss</td><td>3 to 5 % after 14 days, 4.5 to 6.5 % after 21 days, plus trim. Other measurements: 6.5 % and 10.2 %, trim up to 17.9 %</td><td>Beef Research (Parrish 1991, Ahnström 2006)</td></tr>
+</table>
+<p>At a steady temperature, days and degree days follow each other: 28 days at 2 °C is 56 degree days. When the temperature swings, for example with door openings or defrosting, degree days say more. The app lets the restaurant choose what the smiley follows.</p>
+
+<h2 id="maleren-en"><span class="no">9</span>What the sensor can and cannot do</h2>
+<p>The sensor measures the air where it hangs, not the temperature inside the meat. Hang it at the same height as the meat, out of sun and draught. The advantage is that it follows the meat, not the cabinet: it can hang in the garage, move to the cold room and be reset with a paperclip.</p>
+
+<h2 id="kilder-en"><span class="no">10</span>Sources</h2>
+<ol class="refs">
+  <li>Norwegian Deer Centre (Norsk Hjortesenter, Johan Trygve Solheim): “Fakta om slaktebehandling og mørning av hjortevilt” (Norwegian).</li>
+  <li>Kammeret.no: “Mørningsguide” (2020), “Vilt kjøle(skap)” (2024 to 2025), “Viltkjøleskap” (2020 to 2024) (Norwegian forum).</li>
+  <li>MeatEater: “How to Dry Age Meat” (2024).</li>
+  <li>MLA: Dry aged beef food safety. <a href="https://www.mla.com.au/contentassets/f7423b3de0fa4865bfb1f8a470742e78/dry_aged_food_safety_brochure.pdf">mla.com.au</a></li>
+  <li>Beef Research: Dry Aging of Beef (2020). <a href="https://beefresearch.org/media/beefresearch/docs/dry_aging_of_beef_08-20-2020-28.pdf">beefresearch.org</a></li>
+</ol>
+</article>
+
+<footer>© 2026 Hans Einar Steinsland · dg.info-web.no</footer>
+</div>
+<script type="module">
+import { dewPoint } from '../logic.js';
+const html = document.documentElement;
+function pick() {
+  const q = new URLSearchParams(location.search).get('lang');
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('dg.settings') || '{}').lang; } catch (e) { /* ingen lagring */ }
+  const nav = (navigator.language || 'nb').toLowerCase();
+  return q || saved || (/^(nb|nn|no)/.test(nav) ? 'nb' : 'en');
+}
+function setLang(l) {
+  html.lang = l;
+  document.getElementById('lang-btn').textContent = l === 'nb' ? 'English' : 'Norsk';
+  document.getElementById('back').textContent = l === 'nb' ? '← Appen' : '← The app';
+  document.title = l === 'nb' ? 'Lærebok: modning av kjøtt' : 'Handbook: ageing meat';
+  // anker fra appen er på norsk (#fukt); på engelsk ligger de med -en
+  if (l === 'en' && location.hash && document.getElementById(location.hash.slice(1) + '-en')) {
+    document.getElementById(location.hash.slice(1) + '-en').scrollIntoView();
+  }
+}
+setLang(pick());
+document.getElementById('lang-btn').addEventListener('click', () => setLang(html.lang === 'nb' ? 'en' : 'nb'));
+// engelske innholdslenker peker til -en
+for (const a of document.querySelectorAll('article[data-lang="en"] .toc a')) a.href = a.getAttribute('href') + '-en';
+
+// kalkulatorer, felles verdier for begge språk
+const val = (id) => Number(document.getElementById(id).value);
+function calc() {
+  const t = val('c-t'), dg = val('c-dg');
+  const days = t > 0 ? (dg / t) : null;
+  const fmt = (v, d) => v === null || !Number.isFinite(v) ? '–' : v.toLocaleString(html.lang === 'nb' ? 'nb-NO' : 'en-GB', { maximumFractionDigits: d, minimumFractionDigits: d });
+  for (const o of document.querySelectorAll('#c-out, [data-out="c-out"]')) o.textContent = fmt(days, 1);
+  const dp = dewPoint(val('d-t'), val('d-rh'));
+  for (const o of document.querySelectorAll('#d-out, [data-out="d-out"]')) o.textContent = dp === null ? '–' : `${fmt(dp, 1)} °C`;
+}
+for (const i of document.querySelectorAll('.calc input')) {
+  i.addEventListener('input', () => {
+    const id = i.dataset.sync || i.id;
+    document.getElementById(id).value = i.value;
+    for (const m of document.querySelectorAll(`[data-sync="${id}"]`)) m.value = i.value;
+    calc();
+  });
+}
+calc();
+</script>
+</body>
+</html>
