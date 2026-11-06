@@ -374,6 +374,7 @@ async function runOta(source) {
   state.otaDisconnected = false;
   updateOtaButton();
   bar.hidden = false; bar.max = n; bar.value = 0;
+  bar.classList.remove('failed'); st.classList.remove('failed');
   let result = null;
   const onNotify = (ev) => {
     const r = P.parseOtaNotify(ev.target.value);
@@ -407,6 +408,7 @@ async function runOta(source) {
     log(`OTA ferdig: ${result ? result.text : 'ingen svar'}`);
   } catch (e) {
     st.textContent = `Oppdatering feilet: ${e.message}. Den gamle firmwaren er fortsatt i bruk.`;
+    bar.classList.add('failed'); st.classList.add('failed');
     log(`OTA feilet: ${e.message}`);
   } finally {
     ch.removeEventListener('characteristicvaluechanged', onNotify);
