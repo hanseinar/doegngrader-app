@@ -20,7 +20,7 @@ const store = {
 };
 
 const settings = Object.assign(
-  { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, pendingSync: false },
+  { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', pendingSync: false },
   store.get('settings', {}),
 );
 settings.lang = pickLang(settings.lang, navigator.languages || [navigator.language]);
@@ -95,10 +95,21 @@ function openSettings() {
   const dlg = $('settings');
   for (const r of dlg.querySelectorAll('input[name=use]')) r.checked = r.value === settings.use;
   for (const r of dlg.querySelectorAll('input[name=lang]')) r.checked = r.value === settings.lang;
+  for (const r of dlg.querySelectorAll('input[name=restby]')) r.checked = r.value === settings.restBy;
   $('target-vilt').value = settings.targetVilt;
   $('target-days').value = settings.targetDays;
+  applyTargetFields();
   renderSync();
   dlg.showModal();
+}
+
+// Hvilket mål som vises: døgngrader for vilt og for restaurant med døgngrader, ellers dager.
+// Målet i døgngrader er det samme feltet i måleren for vilt og restaurant.
+function applyTargetFields() {
+  const byDays = settings.use === 'restaurant' && settings.restBy !== 'dg';
+  $('fs-dg').hidden = byDays;
+  $('fs-days').hidden = !byDays;
+  $('help-dg').textContent = t(settings.use === 'restaurant' ? 'settings.targetHelpRestDg' : 'settings.targetHelpVilt');
 }
 
 // Endring i dialogen: lagres her med en gang, i måleren litt etter (samler raske trykk).
@@ -130,12 +141,13 @@ async function writeMeterSettings() {
   state.setState = 'saving';
   renderSync();
   try {
-    const want = { use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays };
+    const want = { use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy };
     await state.chars.set.writeValueWithResponse(P.buildSettings(want));
     const got = P.parseSettings(await state.chars.set.readValue());
     if (got.use !== want.use || got.targetDg !== want.targetDg || got.targetDays !== want.targetDays) {
       throw new Error('måleren svarte med andre verdier');
     }
+    if (got.restBy !== want.restBy) throw new Error('måleren kan ikke telle døgngrader i restaurant, oppdater til 0.5.6');
     settings.pendingSync = false;
     saveSettings();
     state.setState = 'synced';
@@ -156,7 +168,7 @@ async function syncSettingsOnConnect() {
   try {
     const m = P.parseSettings(await state.chars.set.readValue());
     const useChanged = m.use !== settings.use;
-    Object.assign(settings, { use: m.use, targetVilt: m.targetDg, targetDays: m.targetDays });
+    Object.assign(settings, { use: m.use, targetVilt: m.targetDg, targetDays: m.targetDays, restBy: m.restBy });
     saveSettings();
     if (useChanged) applyUse();
     state.setState = 'synced';
@@ -332,16 +344,34 @@ function renderRestaurant(s, per) {
   rhB.classList.toggle('out', !!(s && s.rh !== null && (s.rh < L.RESTAURANT_RH[0] || s.rh > L.RESTAURANT_RH[1])));
   tB.classList.toggle('out', !!(s && s.tempC !== null && (s.tempC < L.RESTAURANT_TEMP[0] - 1 || s.tempC > L.RESTAURANT_TEMP[1])));
 
-  let dayTxt = '–', fill = 0, note = s ? '' : t('hero.connectFirst');
-  if (s && per.hours !== null) {
-    const day = Math.floor(per.hours / 24) + 1;
-    dayTxt = t('hero.dayOf', { day, target });
-    fill = Math.min(1, per.hours / 24 / target);
-    note = per.hours / 24 >= target ? t('hero.restDone', { target }) : t('hero.restStart', { when: fmtDay(new Date(per.start)) });
-  } else if (s && state.histInfo) {
-    note = t('hero.periodUnknown');
+  // Hovedtallet følger valget (dager eller døgngrader), det andre står under.
+  const day = per.hours !== null ? Math.floor(per.hours / 24) + 1 : null;
+  const started = per.start !== null ? t('hero.restStart', { when: fmtDay(new Date(per.start)) }) : '';
+  let big = '–', unit = '', sub = '', fill = 0, note = s ? '' : t('hero.connectFirst');
+  if (s) {
+    const dg = fmt(Math.floor(s.dg * 10) / 10);
+    if (settings.restBy === 'dg') {
+      const tg = settings.targetVilt;
+      big = dg;
+      unit = t('hero.dgOf', { target: tg });
+      sub = day !== null ? t('hero.restSubDay', { day }) : '';
+      fill = Math.min(1, s.dg / tg);
+      note = s.dg >= tg ? t('hero.done', { target: tg }) : started;
+    } else if (day !== null) {
+      big = t('hero.dayOf', { day, target });
+      sub = t('hero.restSubDg', { dg });
+      fill = Math.min(1, per.hours / 24 / target);
+      note = per.hours / 24 >= target ? t('hero.restDone', { target }) : started;
+    } else {
+      big = dg;                       // starten er ukjent: vis døgngradene
+      unit = t('unit.dg');
+      note = t('hero.resetForDays');
+    }
   }
-  $('day-value').textContent = dayTxt;
+  $('day-value').textContent = big;
+  $('day-unit').textContent = unit;
+  $('rest-sub').textContent = sub;
+  $('rest-sub').hidden = !sub;
   $('goal-fill').style.width = `${Math.round(fill * 100)}%`;
   $('goal-fill').classList.toggle('done', fill >= 1);
   $('hero-note').textContent = note;
@@ -437,7 +467,7 @@ function renderDebug() {
     const ps = P.periodStartMs(i, state.histReadAt);
     rows.push([t('dbg.periodStart'), ps !== null ? `${fmtWhen(new Date(ps))} (${i.psHour}/${i.psSample})` : t('dbg.unknown')]);
   }
-  if (state.device) rows.push([t('dbg.settings'), state.chars.set ? `${settings.use}, ${settings.targetVilt} dg, ${settings.targetDays} d` : t('settings.old')]);
+  if (state.device) rows.push([t('dbg.settings'), state.chars.set ? `${settings.use}, ${settings.targetVilt} dg, ${settings.targetDays} d, ${settings.restBy}` : t('settings.old')]);
   const esc = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   $('debug-list').innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
 }
@@ -687,10 +717,10 @@ async function runOta(source) {
 function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.5.5';
+  state.fw = '0.5.6';
   state.model = 'LYWSD03MMC B1.1';
   // innstillinger i «måleren», samme bytes som firmwaren
-  let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays });
+  let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy });
   state.chars.set = {
     async writeValueWithResponse(b) { demoSet = new Uint8Array(b); },
     async readValue() { return new DataView(demoSet.buffer.slice(0)); },
@@ -698,7 +728,7 @@ function demoConnect() {
   demoHistory(false);
   const b = new Uint8Array(21), v = new DataView(b.buffer);
   const sum = Math.round(L.dgFromRecords(L.currentPeriod(state.history, state.histInfo.psHour).records) * 28800);
-  v.setUint8(0, 1); v.setUint8(1, 0x55); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
+  v.setUint8(0, 1); v.setUint8(1, 0x56); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
   v.setUint8(6, 82); v.setUint16(7, 2931, true); v.setUint8(9, 61); v.setUint32(10, sum, true);
   v.setUint16(14, 14, true); v.setUint16(16, 7843, true); v.setUint16(18, 47012, true);
   renderConn('on');
@@ -739,7 +769,8 @@ function init() {
   $('m-adv').addEventListener('click', () => { settings.mode = 'adv'; saveSettings(); applyMode(); render(); });
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-refresh').addEventListener('click', refreshAll);
-  for (const r of document.querySelectorAll('#settings input[name=use]')) r.addEventListener('change', (e) => { settings.use = e.target.value; applyUse(); settingChanged(); });
+  for (const r of document.querySelectorAll('#settings input[name=use]')) r.addEventListener('change', (e) => { settings.use = e.target.value; applyUse(); applyTargetFields(); settingChanged(); });
+  for (const r of document.querySelectorAll('#settings input[name=restby]')) r.addEventListener('change', (e) => { settings.restBy = e.target.value; applyTargetFields(); settingChanged(); });
   for (const b of document.querySelectorAll('#settings [data-step]')) {
     b.addEventListener('click', () => setTarget(b.dataset.step, Number($(b.dataset.step).value) + Number(b.dataset.d)));
   }

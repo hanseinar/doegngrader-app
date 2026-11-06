@@ -44,7 +44,8 @@
     <p class="who" id="who" hidden><span id="who-name"></span> <span class="id" id="who-id"></span></p>
 
     <p class="big v-only"><span id="dg-value">–</span><span class="unit" data-t="unit.dg">døgngrader</span></p>
-    <p class="big serif r-only"><span id="day-value">–</span></p>
+    <p class="big serif r-only"><span id="day-value">–</span><span class="unit" id="day-unit"></span></p>
+    <p class="sub r-only" id="rest-sub"></p>
     <div class="track" aria-hidden="true"><div class="track-fill" id="goal-fill"></div></div>
 
     <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
@@ -118,12 +119,17 @@
       <label class="radio"><input type="radio" name="use" value="vilt"><span data-t="use.vilt">Vilt</span></label>
       <label class="radio"><input type="radio" name="use" value="restaurant"><span data-t="use.restaurant">Restaurant</span></label>
     </fieldset>
-    <fieldset class="v-only">
+    <fieldset class="r-only">
+      <legend data-t="settings.restBy">Smilefjeset følger</legend>
+      <label class="radio"><input type="radio" name="restby" value="days"><span data-t="settings.restByDays">Dager</span></label>
+      <label class="radio"><input type="radio" name="restby" value="dg"><span data-t="settings.restByDg">Døgngrader</span></label>
+    </fieldset>
+    <fieldset id="fs-dg">
       <legend data-t="settings.target">Mål</legend>
       <div class="stepper"><button type="button" data-step="target-vilt" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-vilt" type="number" inputmode="numeric" min="1" max="999" step="1"><span class="unit" data-t="unit.dg">døgngrader</span><button type="button" data-step="target-vilt" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
-      <p class="muted small" data-t="settings.targetHelpVilt"></p>
+      <p class="muted small" id="help-dg"></p>
     </fieldset>
-    <fieldset class="r-only">
+    <fieldset id="fs-days">
       <legend data-t="settings.targetDays">Mål, dager</legend>
       <div class="stepper"><button type="button" data-step="target-days" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-days" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit" data-t="unit.days">dager</span><button type="button" data-step="target-days" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
       <p class="muted small" data-t="settings.targetHelpRest"></p>

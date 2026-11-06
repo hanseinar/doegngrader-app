@@ -238,3 +238,5 @@ legend { font-weight: 600; margin-bottom: .4rem; }
   .pill { max-width: 46vw; }
 }
 #set-sync.bad { color: var(--bad); }
+.sub { margin: .5rem 0 0; font-size: 1.35rem; color: var(--muted); }
+body[data-use="restaurant"] .sub { font-family: var(--serif); }
