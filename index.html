@@ -48,11 +48,18 @@
     <summary>Feilsøking</summary>
     <dl id="debug-list"></dl>
     <h3>Oppdater firmware</h3>
-    <p class="muted" id="ota-help">Ta ut batteriet og sett det inn igjen. Koble til innen 3 minutter, velg fila <code>doegngrader.bin</code> fra <code>firmware\bin</code> og trykk Oppdater.</p>
+    <p class="muted" id="ota-help">Ta ut batteriet og sett det inn igjen. Koble til innen 3 minutter og trykk Oppdater.</p>
+    <p id="ota-latest">Ser etter nyeste firmware…</p>
     <div class="ota">
-      <input type="file" id="ota-file" accept=".bin">
-      <button id="btn-ota" disabled>Oppdater</button>
+      <button id="btn-ota-latest" class="primary" disabled>Oppdater til nyeste</button>
     </div>
+    <details class="ota-file">
+      <summary>Bruk egen fil</summary>
+      <div class="ota">
+        <input type="file" id="ota-file" accept=".bin">
+        <button id="btn-ota" disabled>Oppdater med fila</button>
+      </div>
+    </details>
     <progress id="ota-progress" max="1" value="0" hidden></progress>
     <p id="ota-status" role="status"></p>
     <h3>Logg</h3>

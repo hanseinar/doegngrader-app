@@ -300,18 +300,46 @@ function downloadCsv() {
 }
 
 // ---------- OTA ----------
+async function loadLatestFirmware() {
+  const el = $('ota-latest');
+  try {
+    const res = await fetch('firmware/latest.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    state.latest = await res.json();
+    el.textContent = `Nyeste firmware: ${state.latest.version} (${Math.round(state.latest.size / 1024)} KB).`;
+  } catch (e) {
+    state.latest = null;
+    el.textContent = 'Fant ikke nyeste firmware på nettsiden. Bruk egen fil.';
+  }
+  updateOtaButton();
+}
+
 function updateOtaButton() {
   const connected = !!(state.device && state.device.gatt && state.device.gatt.connected);
-  $('btn-ota').disabled = !(connected && state.chars.ota && $('ota-file').files.length && !state.otaRunning);
+  const ready = connected && state.chars.ota && !state.otaRunning;
+  $('btn-ota').disabled = !(ready && $('ota-file').files.length);
+  $('btn-ota-latest').disabled = !(ready && state.latest);
+  if (state.latest) {
+    const same = state.fw && state.fw.trim() === state.latest.version;
+    $('btn-ota-latest').textContent = same ? `Installer ${state.latest.version} på nytt` : `Oppdater til ${state.latest.version}`;
+  }
   if (connected && !state.chars.ota) $('ota-status').textContent = 'Måleren har ikke OTA. Den må ha firmware 0.5.1 eller nyere, flashet over UART første gang.';
 }
 
-async function runOta() {
+async function runOta(source) {
   const st = $('ota-status');
   const bar = $('ota-progress');
   let fw;
   try {
-    fw = new Uint8Array(await $('ota-file').files[0].arrayBuffer());
+    if (source === 'latest') {
+      st.textContent = `Henter firmware ${state.latest.version}…`;
+      const res = await fetch(`firmware/doegngrader.bin?v=${state.latest.sha256.slice(0, 12)}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      fw = new Uint8Array(await res.arrayBuffer());
+      if (fw.length !== state.latest.size) throw new Error('feil størrelse på nedlastet fil');
+    } else {
+      fw = new Uint8Array(await $('ota-file').files[0].arrayBuffer());
+    }
     const info = P.validateFirmware(fw);
     log(`OTA: fil OK, ${info.size} byte, ${info.packets} pakker`);
   } catch (e) { st.textContent = `Fila kan ikke brukes: ${e.message}`; return; }
@@ -414,7 +442,9 @@ function init() {
   });
   $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);
-  $('btn-ota').addEventListener('click', runOta);
+  $('btn-ota').addEventListener('click', () => runOta('file'));
+  $('btn-ota-latest').addEventListener('click', () => runOta('latest'));
+  loadLatestFirmware();
   $('ota-file').addEventListener('change', updateOtaButton);
   let rt;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { drawScale(state.status ? state.status.dg : null); renderChart(); }, 150); });
