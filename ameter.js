@@ -1,8 +1,11 @@
 /* ameter.js - analogt viserinstrument (SVG), gjenbrukbart.
  *
  * Hentet fra hanseinar/webrig-vhf (static/ameter.js), samme opphav.
- * Tillegg her: upper.zoneColor (farge på sonen fra redFrom, standard rød),
- * slik at sonen kan vise «mål nådd» i grønt i stedet for fare.
+ * Tillegg her:
+ *   upper.zoneColor  farge på sonen fra redFrom (standard rød)
+ *   upper.zones      [[fra, til, farge], ...] i stedet for redFrom, for eksempel
+ *                    et grønt bånd midt på skalaen
+ *   face: "alu"      skive i børstet aluminium (standard: opplyst gul, "amber")
  *
  *   const m = new AnalogMeter(element, {
  *     upper: {label: "SIGNAL", ticks: [["1", .04], ["3", .155], ...], redFrom: .5, minor: 20},
@@ -72,24 +75,26 @@
         const [x0, y0] = pt(r, f0), [x1, y1] = pt(r, f1);
         return `M${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)}`;
       };
-      const ink = "#2a1d08", needleColor = "#b8261b";
-      const red = (o.upper && o.upper.zoneColor) || "#b8261b";
+      const alu = o.face === "alu";
+      const ink = alu ? "#23262a" : "#2a1d08", needleColor = alu ? "#7a1f2b" : "#b8261b";
       let g = "";
-      const up = o.upper || {ticks: []}, redFrom = up.redFrom ?? 2;
-      g += `<path d="${arc(148, 0, Math.min(1, redFrom))}" stroke="${ink}" stroke-width="2" fill="none"/>`;
-      if (redFrom < 1) g += `<path d="${arc(148, redFrom, 1)}" stroke="${red}" stroke-width="4.5" fill="none"/>`;
+      const up = o.upper || {ticks: []};
+      const zones = up.zones || ((up.redFrom ?? 2) < 1 ? [[up.redFrom, 1, up.zoneColor || "#b8261b"]] : []);
+      const zoneAt = (f) => { for (const z of zones) if (f >= z[0] - 1e-9 && f <= z[1] + 1e-9) return z[2]; return null; };
+      g += `<path d="${arc(148, 0, 1)}" stroke="${ink}" stroke-width="2" fill="none"/>`;
+      for (const [f0, f1, c] of zones) g += `<path d="${arc(148, f0, f1)}" stroke="${c}" stroke-width="4.5" fill="none"/>`;
       const minor = up.minor || 0;
       for (let i = 0; i <= minor; i++) {
         const f = i / minor, [x0, y0] = pt(148, f), [x1, y1] = pt(153, f);
-        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${f > redFrom ? red : ink}" stroke-width="1"/>`;
+        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${zoneAt(f) || ink}" stroke-width="1"/>`;
       }
       for (const [t, f] of up.ticks) {
-        const [x0, y0] = pt(148, f), [x1, y1] = pt(159, f), [tx, ty] = pt(170, f), r = f > redFrom;
-        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${r ? red : ink}" stroke-width="2"/>`;
-        g += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${r ? red : ink}">${t}</text>`;
+        const [x0, y0] = pt(148, f), [x1, y1] = pt(159, f), [tx, ty] = pt(170, f), c = zoneAt(f) || ink;
+        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${c}" stroke-width="2"/>`;
+        g += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${c}">${t}</text>`;
       }
       if (up.label) g += `<text x="${cx}" y="16" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2.5" fill="${ink}">${up.label}</text>`;
-      if (up.unit) g += `<text x="14" y="${H - 8}" font-size="11" font-weight="700" fill="#6b4d12">${up.unit}</text>`;
+      if (up.unit) g += `<text x="14" y="${H - 8}" font-size="11" font-weight="700" fill="${alu ? "#4a4f55" : "#6b4d12"}">${up.unit}</text>`;
       const lo = o.lower;
       if (lo) {
         g += `<path d="${arc(122, 0, 1)}" stroke="${ink}" stroke-width="1.2" fill="none"/>`;
@@ -108,9 +113,14 @@
  <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-hidden="true"
       style="display:block;width:100%;border-radius:6px">
   <defs>
-   <radialGradient id="${id}-face" cx="50%" cy="105%" r="115%">
+   ${alu ? `<linearGradient id="${id}-face" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#eef0f2"/><stop offset=".45" stop-color="#c9cdd2"/><stop offset=".55" stop-color="#d9dde1"/><stop offset="1" stop-color="#a9aeb4"/>
+   </linearGradient>
+   <pattern id="${id}-brush" width="300" height="3" patternUnits="userSpaceOnUse">
+    <rect width="300" height="1" fill="#fff" opacity=".18"/><rect y="2" width="300" height=".6" fill="#000" opacity=".06"/>
+   </pattern>` : `<radialGradient id="${id}-face" cx="50%" cy="105%" r="115%">
     <stop offset="0" stop-color="#ffe3a0"/><stop offset=".55" stop-color="#f6b84a"/><stop offset="1" stop-color="#cf8419"/>
-   </radialGradient>
+   </radialGradient>`}
    <linearGradient id="${id}-recess" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".16" stop-color="#000" stop-opacity=".12"/>
     <stop offset=".3" stop-color="#000" stop-opacity="0"/><stop offset=".92" stop-color="#000" stop-opacity="0"/>
@@ -132,6 +142,7 @@
   </defs>
   <g clip-path="url(#${id}-clip)">
    <rect x="0" y="0" width="${W}" height="${H}" fill="url(#${id}-face)"/>
+   ${alu ? `<rect x="0" y="0" width="${W}" height="${H}" fill="url(#${id}-brush)"/>` : ""}
    ${g}
    <path class="am-shadow" d="${needle}" fill="#000" opacity=".32" filter="url(#${id}-blur)"/>
    <path class="am-needle" d="${needle}" fill="${needleColor}"/>

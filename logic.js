@@ -15,6 +15,9 @@ export const DEVICE_SMILEY_TARGET = 40;                    // fast i firmwaren (
 export const RESTAURANT_RH = [75, 85];
 export const RESTAURANT_TEMP = [0, 4];
 
+// Vilt: fra 90 % fuktighet varsles kondens (rød sone på instrumentet).
+export const VILT_RH_CONDENSE = 90;
+
 // ---------- batteri ----------
 // Nordic sin CR2032-kurve (nRF5 SDK app_utils.h), stykkevis lineær. Unøyaktig ved kulde og last.
 const NORDIC = [[3000, 100], [2900, 42], [2740, 18], [2440, 6], [2100, 0]];
@@ -46,9 +49,16 @@ export function dewPoint(tC, rh) {
 }
 
 // ---------- periode ----------
-// Postene fra og med siste «ny periode». Finnes ingen, regnes hele historikken som perioden,
-// men complete = false (starten kan ligge før eldste post).
-export function currentPeriod(records) {
+// Postene i perioden som pågår.
+// psHour (fra firmware 0.5.5): timenummeret perioden startet i. Gjelder når det er kjent.
+// Ellers: fra og med siste «ny periode»-merke. Finnes ingen, regnes hele historikken
+// som perioden, men complete = false (starten kan ligge før eldste post).
+export function currentPeriod(records, psHour = null) {
+  if (psHour !== null && psHour !== undefined) {
+    let i = records.findIndex((r) => r.hour >= psHour);
+    if (i < 0) i = records.length;
+    return { records: records.slice(i), before: records.slice(0, i), complete: true };
+  }
   let start = -1;
   for (let i = records.length - 1; i >= 0; i--) {
     if (records[i].flags & HIST_FLAG_NEW_PERIOD) { start = i; break; }
@@ -114,7 +124,7 @@ export function advise(ctx) {
     if (t !== null && t >= 15) out.push({ level: 'warn', key: 'adv.v.flies', vars: { t } });
     if (!firstDay && ctx.avg24 !== null && ctx.avg24 > 15) out.push({ level: 'warn', key: 'adv.v.avg15', vars: { t: ctx.avg24 } });
     else if (!firstDay && ctx.avg24 !== null && ctx.avg24 > 10) out.push({ level: 'info', key: 'adv.v.avg10', vars: { t: ctx.avg24 } });
-    if (rh !== null && rh >= 90) out.push({ level: 'warn', key: 'adv.v.condense', vars: { rh } });
+    if (rh !== null && rh >= VILT_RH_CONDENSE) out.push({ level: 'warn', key: 'adv.v.condense', vars: { rh } });
     if (ctx.dg !== null && ctx.target && ctx.dg >= ctx.target) out.push({ level: 'ok', key: 'adv.v.done', vars: { target: ctx.target } });
   }
   const rank = { warn: 0, info: 1, ok: 2 };

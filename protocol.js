@@ -70,15 +70,54 @@ export function parseStatus(buf) {
   };
 }
 
-// Historikk-info (12 byte).
+// Historikk-info (12 byte, fra 0.5.5: 17 byte med periodestart).
 export function parseHistInfo(buf) {
   const v = view(buf);
   if (v.byteLength < 12) throw new Error(`Historikk-info: ${v.byteLength} byte, ventet 12`);
+  const ps = v.byteLength >= 17 ? v.getUint32(12, true) : 0xffffffff;
   return {
     oldest: v.getUint32(0, true),
     next: v.getUint32(4, true),
     secsSinceLast: v.getUint32(8, true),
+    psHour: ps === 0xffffffff ? null : ps,
+    psSample: v.byteLength >= 17 ? v.getUint8(16) : 0,
   };
+}
+
+// Tidspunkt (ms) da perioden startet, ut fra periodestart i hist-info. null hvis ukjent.
+// Timen `psHour` begynte da timen før sluttet (hourToTimeMs(psHour - 1)).
+export function periodStartMs(info, readAtMs) {
+  if (!info || info.psHour === null || info.psHour === undefined) return null;
+  if (info.psHour > info.next) return null;
+  return hourToTimeMs(info.psHour - 1, info, readAtMs) + info.psSample * 300e3;
+}
+
+// ---------- innstillinger (fra 0.5.5) ----------
+export const SET_SERVICE = 'd6a10007' + UUID_BASE;
+export const SET_CHAR = 'd6a10008' + UUID_BASE;
+export const SET_LIMITS = { dg: [1, 999], days: [1, 99] };
+export const USE_CODES = ['vilt', 'restaurant'];
+
+export function parseSettings(buf) {
+  const v = view(buf);
+  if (v.byteLength < 5) throw new Error(`Innstillinger: ${v.byteLength} byte, ventet 8`);
+  if (v.getUint8(0) !== 1) throw new Error(`Innstillinger: ukjent format ${v.getUint8(0)}`);
+  return {
+    use: USE_CODES[v.getUint8(1)] ?? 'vilt',
+    targetDg: v.getUint16(2, true),
+    targetDays: v.getUint8(4),
+  };
+}
+
+export function buildSettings({ use, targetDg, targetDays }) {
+  const u = USE_CODES.indexOf(use);
+  if (u < 0) throw new Error(`Ukjent bruk: ${use}`);
+  const dg = Math.round(targetDg), days = Math.round(targetDays);
+  if (!(dg >= SET_LIMITS.dg[0] && dg <= SET_LIMITS.dg[1])) throw new Error(`Mål utenfor ${SET_LIMITS.dg.join('..')}: ${targetDg}`);
+  if (!(days >= SET_LIMITS.days[0] && days <= SET_LIMITS.days[1])) throw new Error(`Dager utenfor ${SET_LIMITS.days.join('..')}: ${targetDays}`);
+  const b = new Uint8Array(8);
+  b[0] = 1; b[1] = u; b[2] = dg & 0xff; b[3] = dg >> 8; b[4] = days;
+  return b;
 }
 
 // Historikk-ønske (6 byte).

@@ -20,6 +20,9 @@
   <div class="mode" role="group">
     <button id="m-simple" type="button" aria-pressed="true" data-t="mode.simple">Enkel</button><button id="m-adv" type="button" aria-pressed="false" data-t="mode.adv">Avansert</button>
   </div>
+  <button class="iconbtn" id="btn-refresh" type="button" hidden data-t-label="conn.refresh" aria-label="Les på nytt">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+  </button>
   <button class="iconbtn" id="btn-settings" type="button" data-t-label="settings.open" aria-label="Innstillinger">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
   </button>
@@ -40,19 +43,15 @@
   <section class="hero" aria-live="polite">
     <p class="who" id="who" hidden><span id="who-name"></span> <span class="id" id="who-id"></span></p>
 
-    <!-- vilt -->
-    <div class="v-only">
-      <p class="big"><span id="dg-value">0,0</span><span class="unit" data-t="unit.dg">døgngrader</span></p>
-      <div class="gauge" id="gauge"></div>
-    </div>
-
-    <!-- restaurant -->
-    <div class="r-only">
-      <p class="big serif"><span id="day-value">Dag –</span></p>
-      <div class="track" aria-hidden="true"><div class="track-fill" id="day-fill"></div></div>
-    </div>
+    <p class="big v-only"><span id="dg-value">–</span><span class="unit" data-t="unit.dg">døgngrader</span></p>
+    <p class="big serif r-only"><span id="day-value">–</span></p>
+    <div class="track" aria-hidden="true"><div class="track-fill" id="goal-fill"></div></div>
 
     <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
+  </section>
+
+  <section class="meter">
+    <div class="gauge" id="gauge"></div>
   </section>
 
   <section class="readings" aria-label="Målinger">
@@ -121,14 +120,15 @@
     </fieldset>
     <fieldset class="v-only">
       <legend data-t="settings.target">Mål</legend>
-      <div class="chips" id="target-vilt"></div>
+      <div class="stepper"><button type="button" data-step="target-vilt" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-vilt" type="number" inputmode="numeric" min="1" max="999" step="1"><span class="unit" data-t="unit.dg">døgngrader</span><button type="button" data-step="target-vilt" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
       <p class="muted small" data-t="settings.targetHelpVilt"></p>
     </fieldset>
     <fieldset class="r-only">
       <legend data-t="settings.targetDays">Mål, dager</legend>
-      <div class="chips" id="target-days"></div>
+      <div class="stepper"><button type="button" data-step="target-days" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-days" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit" data-t="unit.days">dager</span><button type="button" data-step="target-days" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
       <p class="muted small" data-t="settings.targetHelpRest"></p>
     </fieldset>
+    <p class="muted small" id="set-sync" role="status"></p>
     <fieldset>
       <legend data-t="settings.lang">Språk</legend>
       <label class="radio"><input type="radio" name="lang" value="nb"><span>Norsk</span></label>
