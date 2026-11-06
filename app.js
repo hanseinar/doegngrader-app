@@ -20,7 +20,8 @@ const store = {
 };
 
 const settings = Object.assign(
-  { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', pendingSync: false },
+  { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', pendingSync: false,
+    fcOn: false, fcLat: null, fcLon: null },
   store.get('settings', {}),
 );
 settings.lang = pickLang(settings.lang, navigator.languages || [navigator.language]);
@@ -31,6 +32,8 @@ const state = {
   histInfo: null, histReadAt: null, history: [], histBusy: false,
   fw: null, model: null, diag: null, latest: null,
   otaRunning: false, otaDisconnected: false,
+  fc: null,             // værvarsel: { series, fetchedAt, expires, lat, lon } eller { error }
+  fcBusy: false,
   setState: 'none',     // innstillinger mot måleren: none, synced, saving, pending, old, failed
   setError: '',
   demo: new URLSearchParams(location.search).has('demo'),
@@ -100,6 +103,7 @@ function openSettings() {
   $('target-days').value = settings.targetDays;
   applyTargetFields();
   renderSync();
+  renderFcSettings();
   dlg.showModal();
 }
 
@@ -250,6 +254,7 @@ function period() {
 function render() {
   applyTexts();
   const s = state.status;
+  renderMeters();
   const per = period();
   const avg24 = L.avgTemp(per.records);
 
@@ -309,6 +314,8 @@ function render() {
   setGauge();
   $('btn-refresh').hidden = !connected();
   renderChart(per);
+  renderPeriodNote();
+  renderForecast(s);
   renderDebug();
   updateOtaButton();
 }
@@ -538,6 +545,8 @@ function onStatus(dv) {
   state.status = P.parseStatus(dv);
   state.statusHex = P.hex(dv);
   state.statusAt = new Date();
+  const st = state.status;
+  setDevInfo({ last: { dg: st.dg, tempC: st.tempC, rh: st.rh, mv: st.vbatMv, at: Date.now() } });
   log(`Status ${state.statusHex}`);
   render();
 }
@@ -605,6 +614,138 @@ async function refreshAll() {
   fetchHistory();
 }
 
+// ---------- oversikt over målere (lagret i nettleseren) ----------
+function knownMeters() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      const m = /^dg\.dev\.([0-9A-F]{4})$/.exec(k || '');
+      if (m) out.push({ id: m[1], ...store.get('dev.' + m[1], {}) });
+    }
+  } catch (e) { /* ingen lagring */ }
+  return out.filter((m) => m.last).sort((a, b) => b.last.at - a.last.at);
+}
+
+function renderMeters() {
+  const list = state.status ? [] : knownMeters();
+  document.body.classList.toggle('overview', list.length > 0);
+  $('meters').hidden = !list.length;
+  const ul = $('meter-list');
+  ul.innerHTML = '';
+  for (const m of list) {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'meter-card';
+    const L1 = document.createElement('span'); L1.className = 'mc-name'; L1.textContent = m.name || `DG-${m.id}`;
+    const L2 = document.createElement('span'); L2.className = 'mc-id'; L2.textContent = m.name ? `DG-${m.id}` : '';
+    const L3 = document.createElement('span'); L3.className = 'mc-vals';
+    L3.textContent = [`${fmt(Math.floor(m.last.dg * 10) / 10)} dg`, m.last.tempC !== null ? fmtT(m.last.tempC) : null, m.last.rh !== null ? fmtRh(m.last.rh) : null].filter(Boolean).join('  ·  ');
+    const L4 = document.createElement('span'); L4.className = 'mc-when'; L4.textContent = t('meters.last', { when: fmtWhen(new Date(m.last.at)) });
+    b.append(L1, L2, L3, L4);
+    b.addEventListener('click', connect);
+    li.appendChild(b);
+    ul.appendChild(li);
+  }
+}
+
+// ---------- notat per periode ----------
+function noteKey() { return state.status && state.devId ? `note.${state.devId}.${state.status.period}` : null; }
+function renderPeriodNote() {
+  const el = $('per-note'), key = noteKey();
+  el.disabled = !key;
+  if (document.activeElement !== el) el.value = key ? store.get(key, '') : '';
+}
+
+// ---------- værvarsel (MET Locationforecast, bare vilt) ----------
+const FC_URL = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+
+async function loadForecast() {
+  if (!settings.fcOn || settings.fcLat === null || state.fcBusy) return;
+  const cached = store.get('fc.cache', null);
+  const samePos = cached && cached.lat === settings.fcLat && cached.lon === settings.fcLon;
+  if (samePos && cached.expires > Date.now()) { state.fc = cached; return; }
+  if (state.demo) {   // ?demo: syntetisk varsel, 6 til 16 °C med døgnvariasjon
+    const t0 = Math.floor(Date.now() / 3600e3) * 3600e3;
+    const series = Array.from({ length: 24 * 9 }, (_, i) => ({ t: t0 + i * 3600e3, temp: 8 + 3 * Math.sin(((i % 24) - 9) / 24 * 2 * Math.PI) + (i > 96 && i < 130 ? 5 : 0) }));
+    state.fc = { series, fetchedAt: Date.now(), expires: Date.now() + 3600e3, lat: settings.fcLat, lon: settings.fcLon };
+    return;
+  }
+  state.fcBusy = true;
+  try {
+    // enkel GET uten egne headere (MET: Origin identifiserer siden)
+    const res = await fetch(`${FC_URL}?lat=${settings.fcLat}&lon=${settings.fcLon}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const series = L.parseMetSeries(await res.json());
+    if (!series.length) throw new Error('tomt varsel');
+    const exp = Date.parse(res.headers.get('Expires') || '');
+    state.fc = { series, fetchedAt: Date.now(), expires: Number.isFinite(exp) ? exp : Date.now() + 3600e3, lat: settings.fcLat, lon: settings.fcLon };
+    store.set('fc.cache', state.fc);
+    log(`Værvarsel: ${series.length} punkter`);
+  } catch (e) {
+    // gammelt varsel brukes videre, nytt forsøk om 10 min
+    state.fc = samePos ? { ...cached, staleError: e.message, expires: Date.now() + 600e3 } : { error: e.message };
+    log(`Værvarsel feilet: ${e.message}`);
+  } finally {
+    state.fcBusy = false;
+    render();
+  }
+}
+
+function renderForecast(s) {
+  const sec = $('forecast');
+  const show = settings.fcOn && settings.use === 'vilt' && settings.fcLat !== null && !!s;
+  sec.hidden = !show;
+  if (!show) return;
+  const fc = state.fc;
+  const days = $('fc-days');
+  days.innerHTML = '';
+  if (!fc || (!fc.series && !fc.error)) { $('fc-text').textContent = t('fc.loading'); $('fc-note').textContent = ''; loadForecast(); return; }
+  if (!fc.series) { $('fc-text').textContent = t('fc.failed', { msg: fc.error }); $('fc-note').textContent = ''; return; }
+  if (fc.expires <= Date.now()) loadForecast();
+  const now = Date.now();
+  const outNow = L.forecastAt(fc.series, now);
+  const offset = s.tempC !== null && outNow !== null ? s.tempC - outNow : 0;
+  const target = settings.targetVilt;
+  const e = L.etaWithForecast(s.dg, target, fc.series, offset, now);
+  $('fc-text').textContent = s.dg >= target ? t('fc.done')
+    : e.at !== null ? t('fc.eta', { target, when: fmtWhen(new Date(e.at)) })
+      : t('fc.beyond', { when: fmtWhen(new Date(e.endMs)), dg: fmt(e.dgEnd) });
+  const dayFmt = new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short' });
+  let warm = null;
+  for (const d of L.dailyRange(fc.series, offset, now)) {
+    const li = document.createElement('li');
+    const date = new Date(`${d.day}T12:00:00`);
+    li.innerHTML = '';
+    const a = document.createElement('span'); a.textContent = dayFmt.format(date);
+    const b = document.createElement('span'); b.textContent = t('fc.day', { min: fmtT(d.min), max: fmtT(d.max) });
+    if (d.max >= 15) { li.className = 'warm'; if (!warm) warm = date; }
+    li.append(a, b);
+    days.appendChild(li);
+  }
+  const sign = offset >= 0 ? '+' : '−';
+  const notes = [t('fc.offset', { d: `${sign}${fmt(Math.abs(offset))} °C` })];
+  if (warm) notes.unshift(t('fc.warm', { when: fmtDay(warm) }));
+  notes.push(t('fc.source', { time: fmtTime(new Date(fc.fetchedAt)) }));
+  $('fc-note').textContent = notes.join(' ');
+}
+
+function renderFcSettings() {
+  $('fc-on').checked = !!settings.fcOn;
+  $('fc-pos').textContent = settings.fcLat !== null ? t('fc.pos', { lat: settings.fcLat, lon: settings.fcLon }) : t('fc.noPos');
+}
+
+function askPosition() {
+  if (!navigator.geolocation) { $('fc-pos').textContent = t('fc.posFailed', { msg: 'geolocation' }); return; }
+  navigator.geolocation.getCurrentPosition((p) => {
+    const r = L.roundPos(p.coords.latitude, p.coords.longitude);
+    settings.fcLat = r.lat; settings.fcLon = r.lon; settings.fcOn = true;
+    saveSettings(); state.fc = null;
+    renderFcSettings(); render();
+  }, (err) => { $('fc-pos').textContent = t('fc.posFailed', { msg: err.message }); }, { maximumAge: 3600e3, timeout: 20000 });
+}
+
 // ---------- byggeinfo ----------
 async function loadBuildInfo() {
   const el = $('build');
@@ -619,6 +760,7 @@ async function loadBuildInfo() {
   } catch (e) {
     el.textContent = t('foot.copy', { year });
   }
+  $('build-menu').textContent = el.textContent;
 }
 
 // ---------- OTA ----------
@@ -778,6 +920,19 @@ function init() {
   for (const r of document.querySelectorAll('#settings input[name=lang]')) r.addEventListener('change', (e) => { settings.lang = e.target.value; saveSettings(); buildGauge(); render(); loadBuildInfo(); });
 
   $('w-start').addEventListener('change', saveWeights);
+  let noteT = 0;
+  $('per-note').addEventListener('input', (e) => {
+    clearTimeout(noteT);
+    noteT = setTimeout(() => { const k = noteKey(); if (k) store.set(k, e.target.value); }, 400);
+  });
+  $('fc-on').addEventListener('change', (e) => {
+    settings.fcOn = e.target.checked; saveSettings();
+    if (settings.fcOn && settings.fcLat === null) askPosition(); else render();
+  });
+  $('btn-fc-pos').addEventListener('click', askPosition);
+  // Menyen lukkes med krysset eller Esc. Enter i et felt skal ikke lukke den.
+  $('settings').querySelector('form').addEventListener('submit', (e) => e.preventDefault());
+  $('btn-menu-close').addEventListener('click', () => $('settings').close());
   $('w-now').addEventListener('change', saveWeights);
   $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);

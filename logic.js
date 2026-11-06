@@ -136,3 +136,63 @@ export function deviceId(name) {
   const m = /^DG-([0-9A-F]{4})$/i.exec(name || '');
   return m ? m[1].toUpperCase() : null;
 }
+
+// ---------- værvarsel (MET Locationforecast 2.0, compact) ----------
+// Tidsserie [{t (ms), temp (°C)}] fra svaret. Ukjente punkter hoppes over.
+export function parseMetSeries(json) {
+  const ts = json && json.properties && json.properties.timeseries;
+  if (!Array.isArray(ts)) return [];
+  const out = [];
+  for (const p of ts) {
+    const v = p && p.data && p.data.instant && p.data.instant.details && p.data.instant.details.air_temperature;
+    const t = Date.parse(p && p.time);
+    if (typeof v === 'number' && Number.isFinite(t)) out.push({ t, temp: v });
+  }
+  return out.sort((a, b) => a.t - b.t);
+}
+
+// Varslet temperatur nærmest tidspunktet.
+export function forecastAt(series, ms) {
+  let best = null;
+  for (const p of series) if (!best || Math.abs(p.t - ms) < Math.abs(best.t - ms)) best = p;
+  return best ? best.temp : null;
+}
+
+// Anslag: døgngrader fra nå med varslet temperatur + offset (måleren minus varselet nå).
+// Hvert punkt gjelder til neste punkt. Svar: { at: ms eller null, dgEnd, endMs }.
+export function etaWithForecast(dgNow, target, series, offset, nowMs) {
+  if (dgNow >= target) return { at: nowMs, dgEnd: dgNow, endMs: nowMs };
+  let dg = dgNow;
+  for (let i = 0; i < series.length - 1; i++) {
+    const a = Math.max(series[i].t, nowMs), b = series[i + 1].t;
+    if (b <= a) continue;
+    const temp = Math.max(0, series[i].temp + offset);
+    const add = (temp * (b - a)) / 86400e3;
+    if (temp > 0 && dg + add >= target) {
+      return { at: a + ((target - dg) / temp) * 86400e3, dgEnd: target, endMs: b };
+    }
+    dg += add;
+  }
+  const endMs = series.length ? Math.max(series[series.length - 1].t, nowMs) : nowMs;
+  return { at: null, dgEnd: dg, endMs };
+}
+
+// Laveste og høyeste temperatur per dag (lokal tid), med offset. [{day: 'YYYY-MM-DD', min, max}]
+export function dailyRange(series, offset, fromMs) {
+  const days = new Map();
+  for (const p of series) {
+    if (p.t < fromMs) continue;
+    const d = new Date(p.t);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const v = p.temp + offset;
+    const cur = days.get(key);
+    if (!cur) days.set(key, { day: key, min: v, max: v });
+    else { cur.min = Math.min(cur.min, v); cur.max = Math.max(cur.max, v); }
+  }
+  return [...days.values()];
+}
+
+// Posisjon avrundet til 2 desimaler (omtrent 1 km). MET tillater høyst 4.
+export function roundPos(lat, lon) {
+  return { lat: Math.round(lat * 100) / 100, lon: Math.round(lon * 100) / 100 };
+}

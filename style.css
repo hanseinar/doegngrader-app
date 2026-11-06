@@ -164,7 +164,7 @@ body[data-use="vilt"] .rd-rh { border-left: 1px solid var(--edge); padding-left:
 body[data-use="vilt"] .rd-t { padding-left: 0; border-left: 0; }
 body[data-use="restaurant"] .rd .v { font-family: var(--serif); font-weight: 500; }
 
-.weights .wrow { display: flex; gap: .8rem; align-items: flex-end; flex-wrap: wrap; }
+.period .wrow { display: flex; gap: .8rem; align-items: flex-end; flex-wrap: wrap; }
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .95rem; color: var(--muted); }
 .field input { min-height: var(--touch); padding: 0 .7rem; border: 1px solid var(--edge); border-radius: 8px; background: var(--panel); color: var(--ink); width: 9rem; }
 .pop .field input { width: 100%; }
@@ -240,3 +240,43 @@ legend { font-weight: 600; margin-bottom: .4rem; }
 #set-sync.bad { color: var(--bad); }
 .sub { margin: .5rem 0 0; font-size: 1.35rem; color: var(--muted); }
 body[data-use="restaurant"] .sub { font-family: var(--serif); }
+
+/* ---------- oversikt over målere ---------- */
+body.overview .hero, body.overview .meter, body.overview .readings, body.overview .advice,
+body.overview .history, body.overview .period, body.overview .forecast { display: none; }
+#meter-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.meter-card { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: .15rem .8rem; padding: .9rem 1rem;
+  border: 1px solid var(--edge); border-radius: 12px; background: var(--panel); color: var(--ink); cursor: pointer; font: inherit; }
+.meter-card:hover { border-color: var(--accent); }
+.mc-name { font-weight: 600; font-size: 1.1rem; font-family: var(--hfont); }
+.mc-id { color: var(--muted); font-size: .9rem; justify-self: end; }
+.mc-vals { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+.mc-when { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
+
+/* ---------- periode ---------- */
+.wide-field { display: block; }
+.wide-field textarea { width: 100%; box-sizing: border-box; margin-top: .25rem; padding: .6rem; border: 1px solid var(--edge); border-radius: 8px;
+  background: var(--panel); color: var(--ink); font: inherit; resize: vertical; }
+.period .wrow { margin-top: .8rem; }
+
+/* ---------- værvarsel ---------- */
+.fc-days { list-style: none; margin: .4rem 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .3rem .8rem; font-size: .95rem; }
+.fc-days li { display: flex; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--edge); padding: .2rem 0; font-variant-numeric: tabular-nums; }
+.fc-days li span:first-child { color: var(--muted); }
+.fc-days li.warm span:last-child { color: var(--bad); font-weight: 600; }
+
+/* ---------- meny (tannhjulet) ---------- */
+dialog.menu { width: min(34rem, calc(100vw - 1.5rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 0 1.1rem 1rem; }
+.menu-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: center; background: var(--panel);
+  padding: .8rem 0 .5rem; border-bottom: 1px solid var(--edge); }
+.menu-head h2 { margin: 0; }
+dialog.menu > form > details { border-bottom: 1px solid var(--edge); padding: .2rem 0; }
+dialog.menu > form > details > summary { cursor: pointer; padding: .7rem 0; font-weight: 600; font-family: var(--hfont); list-style-position: inside; }
+dialog.menu > form > details[open] > summary { color: var(--accent); }
+dialog.menu dl { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; font-size: .9rem; margin: 0 0 .8rem; }
+dialog.menu dt { color: var(--muted); }
+dialog.menu dd { margin: 0; overflow-wrap: anywhere; }
+dialog.menu pre { max-height: 14rem; overflow: auto; font-size: .75rem; white-space: pre-wrap; }
+dialog.menu .links { margin: 0 0 .8rem; padding-left: 1.1rem; }
+dialog.menu .links a { color: var(--accent); }
+dialog.menu .build { color: var(--muted); margin-top: .8rem; }

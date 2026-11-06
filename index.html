@@ -40,6 +40,12 @@
 <main id="main">
   <p class="nosupport" id="nosupport" hidden data-t="err.noBluetooth"></p>
 
+  <section class="meters" id="meters" hidden aria-labelledby="meters-h">
+    <h2 id="meters-h" data-t="meters.title">Dine målere</h2>
+    <ul id="meter-list"></ul>
+    <p class="muted small" data-t="meters.tap"></p>
+  </section>
+
   <section class="hero" aria-live="polite">
     <p class="who" id="who" hidden><span id="who-name"></span> <span class="id" id="who-id"></span></p>
 
@@ -61,15 +67,6 @@
     <div class="rd rd-bat"><span class="v" id="bat">–</span><span class="l"><span data-t="read.battery">batteri</span> <span id="bat-pct"></span></span></div>
   </section>
 
-  <section class="weights r-only" aria-labelledby="w-h">
-    <h2 id="w-h" data-t="rest.weight">Vekt</h2>
-    <div class="wrow">
-      <label class="field"><span data-t="rest.weightStart">Startvekt, kg</span><input id="w-start" type="number" inputmode="decimal" min="0" step="0.01"></label>
-      <label class="field"><span data-t="rest.weightNow">Vekt nå, kg</span><input id="w-now" type="number" inputmode="decimal" min="0" step="0.01"></label>
-      <p class="shrink" id="shrink"></p>
-    </div>
-  </section>
-
   <section class="advice" aria-labelledby="adv-h">
     <h2 id="adv-h" data-t="adv.title">Dette må du passe på</h2>
     <ul id="advice"></ul>
@@ -88,59 +85,105 @@
     <p class="muted" id="hist-note"></p>
   </section>
 
-  <section class="details adv" aria-labelledby="dbg-h">
-    <h2 id="dbg-h" data-t="dbg.title">Detaljer</h2>
-    <dl id="debug-list"></dl>
-
-    <h3 data-t="ota.title">Oppdater firmware</h3>
-    <p class="muted" data-t="ota.help"></p>
-    <p id="ota-latest" data-t="ota.latestLoading"></p>
-    <div class="btns"><button id="btn-ota-latest" class="primary" type="button" disabled>–</button></div>
-    <details class="ota-file">
-      <summary data-t="ota.ownFile">Bruk egen fil</summary>
-      <div class="btns">
-        <input type="file" id="ota-file" accept=".bin">
-        <button id="btn-ota" type="button" disabled data-t="ota.updateFile">Oppdater med fila</button>
-      </div>
-    </details>
-    <progress id="ota-progress" max="1" value="0" hidden></progress>
-    <p id="ota-status" role="status"></p>
-
-    <h3 data-t="dbg.log">Logg</h3>
-    <pre id="log"></pre>
+  <section class="forecast adv" id="forecast" hidden aria-labelledby="fc-h">
+    <h2 id="fc-h" data-t="fc.title">Anslag med værvarsel</h2>
+    <p id="fc-text"></p>
+    <ol class="fc-days" id="fc-days"></ol>
+    <p class="muted small" id="fc-note"></p>
   </section>
+
+  <section class="period adv" aria-labelledby="per-h">
+    <h2 id="per-h" data-t="per.title">Perioden</h2>
+    <label class="field wide-field"><span data-t="per.note">Notat</span>
+      <textarea id="per-note" rows="3" maxlength="2000" data-t-ph="per.notePh"></textarea></label>
+    <div class="wrow r-only">
+      <label class="field"><span data-t="rest.weightStart">Startvekt, kg</span><input id="w-start" type="number" inputmode="decimal" min="0" step="0.01"></label>
+      <label class="field"><span data-t="rest.weightNow">Vekt nå, kg</span><input id="w-now" type="number" inputmode="decimal" min="0" step="0.01"></label>
+      <p class="shrink" id="shrink"></p>
+    </div>
+    <p class="muted small" data-t="per.saved"></p>
+  </section>
+
 </main>
 
-<dialog id="settings">
+<dialog id="settings" class="menu">
   <form method="dialog">
-    <h2 data-t="settings.title">Innstillinger</h2>
-    <fieldset>
-      <legend data-t="settings.use">Bruk</legend>
-      <label class="radio"><input type="radio" name="use" value="vilt"><span data-t="use.vilt">Vilt</span></label>
-      <label class="radio"><input type="radio" name="use" value="restaurant"><span data-t="use.restaurant">Restaurant</span></label>
-    </fieldset>
-    <fieldset class="r-only">
-      <legend data-t="settings.restBy">Smilefjeset følger</legend>
-      <label class="radio"><input type="radio" name="restby" value="days"><span data-t="settings.restByDays">Dager</span></label>
-      <label class="radio"><input type="radio" name="restby" value="dg"><span data-t="settings.restByDg">Døgngrader</span></label>
-    </fieldset>
-    <fieldset id="fs-dg">
-      <legend data-t="settings.target">Mål</legend>
-      <div class="stepper"><button type="button" data-step="target-vilt" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-vilt" type="number" inputmode="numeric" min="1" max="999" step="1"><span class="unit" data-t="unit.dg">døgngrader</span><button type="button" data-step="target-vilt" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
-      <p class="muted small" id="help-dg"></p>
-    </fieldset>
-    <fieldset id="fs-days">
-      <legend data-t="settings.targetDays">Mål, dager</legend>
-      <div class="stepper"><button type="button" data-step="target-days" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-days" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit" data-t="unit.days">dager</span><button type="button" data-step="target-days" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
-      <p class="muted small" data-t="settings.targetHelpRest"></p>
-    </fieldset>
-    <p class="muted small" id="set-sync" role="status"></p>
-    <fieldset>
-      <legend data-t="settings.lang">Språk</legend>
-      <label class="radio"><input type="radio" name="lang" value="nb"><span>Norsk</span></label>
-      <label class="radio"><input type="radio" name="lang" value="en"><span>English</span></label>
-    </fieldset>
-    <button class="primary wide" value="close" data-t="settings.close">Lukk</button>
+    <div class="menu-head"><h2 data-t="menu.title">Meny</h2><button class="iconbtn" type="button" id="btn-menu-close" data-t-label="settings.close" aria-label="Lukk">✕</button></div>
+
+    <details open>
+      <summary data-t="settings.title">Innstillinger</summary>
+      <fieldset>
+        <legend data-t="settings.use">Bruk</legend>
+        <label class="radio"><input type="radio" name="use" value="vilt"><span data-t="use.vilt">Vilt</span></label>
+        <label class="radio"><input type="radio" name="use" value="restaurant"><span data-t="use.restaurant">Restaurant</span></label>
+      </fieldset>
+      <fieldset class="r-only">
+        <legend data-t="settings.restBy">Smilefjeset følger</legend>
+        <label class="radio"><input type="radio" name="restby" value="days"><span data-t="settings.restByDays">Dager</span></label>
+        <label class="radio"><input type="radio" name="restby" value="dg"><span data-t="settings.restByDg">Døgngrader</span></label>
+      </fieldset>
+      <fieldset id="fs-dg">
+        <legend data-t="settings.target">Mål</legend>
+        <div class="stepper"><button type="button" data-step="target-vilt" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-vilt" type="number" inputmode="numeric" min="1" max="999" step="1"><span class="unit" data-t="unit.dg">døgngrader</span><button type="button" data-step="target-vilt" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
+        <p class="muted small" id="help-dg"></p>
+      </fieldset>
+      <fieldset id="fs-days">
+        <legend data-t="settings.targetDays">Mål, dager</legend>
+        <div class="stepper"><button type="button" data-step="target-days" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-days" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit" data-t="unit.days">dager</span><button type="button" data-step="target-days" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
+        <p class="muted small" data-t="settings.targetHelpRest"></p>
+      </fieldset>
+      <p class="muted small" id="set-sync" role="status"></p>
+      <fieldset>
+        <legend data-t="settings.lang">Språk</legend>
+        <label class="radio"><input type="radio" name="lang" value="nb"><span>Norsk</span></label>
+        <label class="radio"><input type="radio" name="lang" value="en"><span>English</span></label>
+      </fieldset>
+    </details>
+
+    <details>
+      <summary data-t="fc.settings">Værvarsel</summary>
+      <p class="muted small" data-t="fc.help"></p>
+      <label class="radio"><input type="checkbox" id="fc-on"><span data-t="fc.enable">Bruk værvarsel for anslag (vilt i garasje eller ute)</span></label>
+      <p class="small" id="fc-pos"></p>
+      <div class="btns"><button type="button" id="btn-fc-pos" data-t="fc.usePos">Bruk min posisjon</button></div>
+    </details>
+
+    <details>
+      <summary data-t="dbg.title">Detaljer om måleren</summary>
+      <dl id="debug-list"></dl>
+    </details>
+
+    <details id="ota-sec">
+      <summary data-t="ota.title">Oppdater firmware</summary>
+      <p class="muted" data-t="ota.help"></p>
+      <p id="ota-latest" data-t="ota.latestLoading"></p>
+      <div class="btns"><button id="btn-ota-latest" class="primary" type="button" disabled>–</button></div>
+      <details class="ota-file">
+        <summary data-t="ota.ownFile">Bruk egen fil</summary>
+        <div class="btns">
+          <input type="file" id="ota-file" accept=".bin">
+          <button id="btn-ota" type="button" disabled data-t="ota.updateFile">Oppdater med fila</button>
+        </div>
+      </details>
+      <progress id="ota-progress" max="1" value="0" hidden></progress>
+      <p id="ota-status" role="status"></p>
+
+    </details>
+
+    <details>
+      <summary data-t="dbg.log">Logg</summary>
+      <pre id="log"></pre>
+    </details>
+
+    <details>
+      <summary data-t="help.title">Hjelp</summary>
+      <ul class="links">
+        <li><a href="manual/" target="_blank" rel="noopener" data-t="help.manual">Bruksanvisning (A4)</a></li>
+        <li><a href="laerebok/" target="_blank" rel="noopener" data-t="help.book">Lærebok: modning av kjøtt</a></li>
+      </ul>
+    </details>
+
+    <p class="build small" id="build-menu"></p>
   </form>
 </dialog>
 
