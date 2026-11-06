@@ -132,6 +132,7 @@ progress { width: 100%; height: 1rem; margin-top: .6rem; accent-color: var(--mea
 .nosupport { border-left: 4px solid var(--meat); padding-left: .8rem; }
 .foot { color: var(--muted); font-size: .9rem; padding-bottom: 2rem; }
 .foot a { color: inherit; }
+.foot .build { font-size: .8rem; opacity: .8; margin-top: .3rem; }
 
 @media (min-width: 40rem) {
   button.primary { flex: 0 1 auto; }

@@ -299,6 +299,21 @@ function downloadCsv() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+// ---------- byggeinfo ----------
+async function loadBuildInfo() {
+  const el = $('build');
+  try {
+    const res = await fetch('build.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error();
+    const b = await res.json();
+    const d = new Date(b.built);
+    const when = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    el.textContent = `Versjon ${b.commit}, bygget ${when}. © ${d.getFullYear()} Hans Einar Steinsland`;
+  } catch (e) {
+    el.textContent = `© ${new Date().getFullYear()} Hans Einar Steinsland`;
+  }
+}
+
 // ---------- OTA ----------
 async function loadLatestFirmware() {
   const el = $('ota-latest');
@@ -445,6 +460,7 @@ function init() {
   $('btn-ota').addEventListener('click', () => runOta('file'));
   $('btn-ota-latest').addEventListener('click', () => runOta('latest'));
   loadLatestFirmware();
+  loadBuildInfo();
   $('ota-file').addEventListener('change', updateOtaButton);
   let rt;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { drawScale(state.status ? state.status.dg : null); renderChart(); }, 150); });
