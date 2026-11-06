@@ -1,10 +1,8 @@
 /* Døgngrader, nettside versjon 2.
  *
- * To uttrykk styrt av body[data-use]:
- *  - vilt: garasje, låve og kjølehjørne. Mørk granitt, analogt instrument med
- *    varm skive (fra webrig-vhf), smal teknisk skrift, store tall.
- *  - restaurant: modningsskap i en god restaurant. Kullsvart og hvitt, dyp
- *    burgunder og messing, seriff i overskrifter og hovedtall.
+ * Ett uttrykk (fra 2.4): kullsvart og hvitt, dyp burgunder og messing,
+ * seriff i overskrifter og hovedtall, instrument i børstet aluminium.
+ * body[data-use] styrer bare innhold (vilt eller restaurant), ikke farger.
  * Enkel/Avansert: body.simple skjuler .adv.
  * Grønn = i orden (tilkoblet, OTA går), rød = feil. Ingen andre betydninger.
  */
@@ -19,33 +17,10 @@
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
 }
 
-/* ---------- vilt (standard) ---------- */
+/* ---------- ett uttrykk for begge (fra 2.4): kull, messing og seriff ----------
+ * Hans Einar valgte restaurant-uttrykket for både vilt og restaurant (2026-11-06).
+ * Forskjellen mellom bruksområdene ligger i innholdet, ikke i fargene. */
 body {
-  --bg: #1b2421;
-  --panel: #232e2a;
-  --edge: #354440;
-  --ink: #e6ebe6;
-  --muted: #95a59e;
-  --accent: #e7b04a;        /* skive, messing-gul */
-  --temp: #7fb3d3;
-  --rh: #8fd0b0;
-  --hfont: var(--sans);
-}
-@media (prefers-color-scheme: light) {
-  body {
-    --bg: #eceee8;
-    --panel: #f7f8f4;
-    --edge: #c9cfc7;
-    --ink: #1f2e29;
-    --muted: #5f6e67;
-    --accent: #a8731b;
-    --temp: #2f6585;
-    --rh: #2c7a57;
-  }
-}
-
-/* ---------- restaurant ---------- */
-body[data-use="restaurant"] {
   --bg: #141211;
   --panel: #1d1a19;
   --edge: #3a3330;
@@ -58,7 +33,7 @@ body[data-use="restaurant"] {
   --hfont: var(--serif);
 }
 @media (prefers-color-scheme: light) {
-  body[data-use="restaurant"] {
+  body {
     --bg: #f7f6f3;
     --panel: #ffffff;
     --edge: #ddd6cf;
@@ -162,7 +137,7 @@ section { margin-top: 1.4rem; }
 body[data-use="vilt"] .rd-t { order: -1; }
 body[data-use="vilt"] .rd-rh { border-left: 1px solid var(--edge); padding-left: .9rem; }
 body[data-use="vilt"] .rd-t { padding-left: 0; border-left: 0; }
-body[data-use="restaurant"] .rd .v { font-family: var(--serif); font-weight: 500; }
+.rd .v { font-family: var(--serif); font-weight: 500; }
 
 .period .wrow { display: flex; gap: .8rem; align-items: flex-end; flex-wrap: wrap; }
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .95rem; color: var(--muted); }
@@ -239,7 +214,7 @@ legend { font-weight: 600; margin-bottom: .4rem; }
 }
 #set-sync.bad { color: var(--bad); }
 .sub { margin: .5rem 0 0; font-size: 1.35rem; color: var(--muted); }
-body[data-use="restaurant"] .sub { font-family: var(--serif); }
+.sub { font-family: var(--serif); }
 
 /* ---------- oversikt over målere ---------- */
 body.overview .hero, body.overview .meter, body.overview .readings, body.overview .advice,
@@ -260,7 +235,7 @@ body.overview .history, body.overview .period, body.overview .forecast { display
 .period .wrow { margin-top: .8rem; }
 
 /* ---------- værvarsel ---------- */
-.fc-days { list-style: none; margin: .4rem 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .3rem .8rem; font-size: .95rem; }
+.fc-days { list-style: none; margin: .4rem 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .1rem 1.2rem; font-size: .95rem; }
 .fc-days li { display: flex; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--edge); padding: .2rem 0; font-variant-numeric: tabular-nums; }
 .fc-days li span:first-child { color: var(--muted); }
 .fc-days li.warm span:last-child { color: var(--bad); font-weight: 600; }

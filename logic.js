@@ -196,3 +196,18 @@ export function dailyRange(series, offset, fromMs) {
 export function roundPos(lat, lon) {
   return { lat: Math.round(lat * 100) / 100, lon: Math.round(lon * 100) / 100 };
 }
+
+// ---------- stedsnavn (Kartverket) ----------
+// Velger et stedsnavn som folk kjenner igjen fra svaret til
+// ws.geonorge.no/stedsnavn/v1/punkt: tettsted/bygd/grend først, ellers gard, ellers nærmeste.
+const PLACE_RANK = [/^(By|Tettsted|Tettbebyggelse)$/i, /^(Bygd|Bygdelag|Grend|Boligfelt)/i, /^(Gard|Navnegard)$/i];
+export function pickPlaceName(json) {
+  const list = (json && Array.isArray(json.navn) ? json.navn : [])
+    .map((n) => ({ name: n.stedsnavn && n.stedsnavn[0] && n.stedsnavn[0]['skrivemåte'], type: n.navneobjekttype || '', m: n.meterFraPunkt ?? Infinity }))
+    .filter((n) => n.name);
+  for (const re of PLACE_RANK) {
+    const hits = list.filter((n) => re.test(n.type)).sort((a, b) => a.m - b.m);
+    if (hits.length) return hits[0].name;
+  }
+  return list.sort((a, b) => a.m - b.m)[0]?.name ?? null;
+}

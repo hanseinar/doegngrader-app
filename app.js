@@ -21,7 +21,7 @@ const store = {
 
 const settings = Object.assign(
   { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', pendingSync: false,
-    fcOn: false, fcLat: null, fcLon: null },
+    fcOn: false, fcLat: null, fcLon: null, fcPlace: null },
   store.get('settings', {}),
 );
 settings.lang = pickLang(settings.lang, navigator.languages || [navigator.language]);
@@ -73,7 +73,7 @@ function applyMode() {
 
 function applyUse() {
   document.body.dataset.use = settings.use;
-  document.querySelector('meta[name=theme-color]').setAttribute('content', settings.use === 'restaurant' ? '#141211' : '#1b2421');
+  // samme farger for vilt og restaurant (fra 2.4)
   buildGauge();
 }
 
@@ -218,8 +218,7 @@ function devInfo() { return state.devId ? store.get('dev.' + state.devId, {}) : 
 function setDevInfo(patch) { if (state.devId) store.set('dev.' + state.devId, Object.assign(devInfo(), patch)); }
 
 // ---------- instrument: fuktighet ----------
-// Vilt: opplyst gul skive, rødt fra 90 % (kondens). Restaurant: børstet aluminium,
-// grønt bånd for målområdet.
+// Børstet aluminium for begge. Vilt: rødt fra 90 % (kondens). Restaurant: grønt bånd for målområdet.
 let gauge = null;
 function buildGauge() {
   const el = $('gauge');
@@ -228,7 +227,7 @@ function buildGauge() {
   const ticks = [0, 20, 40, 60, 80, 100].map((v) => [String(v), v / 100]);
   const zones = rest ? [[L.RESTAURANT_RH[0] / 100, L.RESTAURANT_RH[1] / 100, '#2f8a4f']] : [[L.VILT_RH_CONDENSE / 100, 1, '#b8261b']];
   gauge = new window.AnalogMeter(el, {
-    face: rest ? 'alu' : 'amber',
+    face: 'alu',                       // aluminium for begge (fra 2.4)
     upper: { label: t('gauge.label'), ticks, minor: 20, zones },
     riseS: 0.8, fallS: 0.8,
   });
@@ -745,20 +744,54 @@ function renderForecast(s) {
   const sign = offset >= 0 ? '+' : '−';
   const notes = [t('fc.offset', { d: `${sign}${fmt(Math.abs(offset))} °C` })];
   if (warm) notes.unshift(t('fc.warm', { when: fmtDay(warm) }));
-  notes.push(t('fc.source', { time: fmtTime(new Date(fc.fetchedAt)) }));
+  const place = placeText();
+  notes.push(t('fc.source', { time: fmtTime(new Date(fc.fetchedAt)), place: place || `${settings.fcLat}, ${settings.fcLon}` }));
+  if (!place) loadPlaceName();
   $('fc-note').textContent = notes.join(' ');
+}
+
+// Stedsnavn for posisjonen fra Kartverket (bare Norge). MET-varselet har ikke stedsnavn.
+let placeTriedFor = '';
+async function loadPlaceName() {
+  if (settings.fcLat === null || settings.fcPlace) return;
+  const key = `${settings.fcLat},${settings.fcLon}`;
+  if (placeTriedFor === key) return;      // ett forsøk per posisjon og sidevisning
+  placeTriedFor = key;
+  const q = `nord=${settings.fcLat}&ost=${settings.fcLon}&koordsys=4258`;
+  try {
+    const [k, n] = await Promise.all([
+      fetch(`https://ws.geonorge.no/kommuneinfo/v1/punkt?${q}`).then((r) => (r.ok ? r.json() : null)),
+      fetch(`https://ws.geonorge.no/stedsnavn/v1/punkt?${q}&radius=5000&treffPerSide=500&utkoordsys=4258`).then((r) => (r.ok ? r.json() : null)),
+    ]);
+    const kommune = k && k.kommunenavn ? k.kommunenavn : null;
+    const sted = L.pickPlaceName(n);
+    if (!kommune && !sted) return;
+    settings.fcPlace = { sted, kommune, lat: settings.fcLat, lon: settings.fcLon };
+    saveSettings();
+    renderFcSettings();
+    render();
+  } catch (e) { log(`Stedsnavn: ${e.message}`); }
+}
+
+function placeText() {
+  const p = settings.fcPlace;
+  if (!p || p.lat !== settings.fcLat || p.lon !== settings.fcLon) return null;
+  return p.sted && p.kommune && p.sted !== p.kommune ? t('fc.near', { sted: p.sted, kommune: p.kommune }) : (p.sted || p.kommune);
 }
 
 function renderFcSettings() {
   $('fc-on').checked = !!settings.fcOn;
-  $('fc-pos').textContent = settings.fcLat !== null ? t('fc.pos', { lat: settings.fcLat, lon: settings.fcLon }) : t('fc.noPos');
+  const place = placeText();
+  $('fc-pos').textContent = settings.fcLat === null ? t('fc.noPos')
+    : place ? `${place} (${settings.fcLat}, ${settings.fcLon})` : t('fc.pos', { lat: settings.fcLat, lon: settings.fcLon });
+  if (settings.fcLat !== null && !place) loadPlaceName();
 }
 
 function askPosition() {
   if (!navigator.geolocation) { $('fc-pos').textContent = t('fc.posFailed', { msg: 'geolocation' }); return; }
   navigator.geolocation.getCurrentPosition((p) => {
     const r = L.roundPos(p.coords.latitude, p.coords.longitude);
-    settings.fcLat = r.lat; settings.fcLon = r.lon; settings.fcOn = true;
+    settings.fcLat = r.lat; settings.fcLon = r.lon; settings.fcOn = true; settings.fcPlace = null; placeTriedFor = '';
     saveSettings(); state.fc = null;
     renderFcSettings(); render();
   }, (err) => { $('fc-pos').textContent = t('fc.posFailed', { msg: err.message }); }, { maximumAge: 3600e3, timeout: 20000 });
