@@ -1,6 +1,6 @@
 // sw.js - gjør siden tilgjengelig uten nett (kjølerom og låve har ofte dårlig dekning)
-const CACHE = 'dg-v5';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'protocol.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'dg-v6';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'protocol.js', 'logic.js', 'i18n.js', 'ameter.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

@@ -5,76 +5,141 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Døgngrader</title>
 <meta name="description" content="Les av døgngrader-måleren over Bluetooth.">
-<meta name="theme-color" content="#1f2e29">
+<meta name="theme-color" content="#1b2421">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
+<script src="ameter.js"></script>
 <script type="module" src="app.js"></script>
 </head>
-<body>
+<body class="simple" data-use="vilt">
 <header class="top">
-  <h1 class="brand">Døgngrader</h1>
-  <p class="conn" id="conn" role="status">Ikke tilkoblet</p>
+  <button class="pill conn" id="conn" type="button" aria-haspopup="dialog">
+    <span class="lamp" id="conn-lamp"></span><span id="conn-txt" data-t="conn.off">Ikke tilkoblet</span>
+  </button>
+  <div class="mode" role="group">
+    <button id="m-simple" type="button" aria-pressed="true" data-t="mode.simple">Enkel</button><button id="m-adv" type="button" aria-pressed="false" data-t="mode.adv">Avansert</button>
+  </div>
+  <button class="iconbtn" id="btn-settings" type="button" data-t-label="settings.open" aria-label="Innstillinger">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
 </header>
 
-<main>
-  <section class="hero" aria-labelledby="dg-label">
-    <p class="dg"><span id="dg-value">–</span><span class="unit" id="dg-label">døgngrader</span></p>
-    <svg class="scale" id="scale" viewBox="0 0 360 64" height="64" role="img" aria-label="Døgngrader på skala fra 0 til 60"></svg>
-    <p class="hero-note" id="hero-note">Koble til måleren for å lese av.</p>
-  </section>
+<div class="pop" id="conn-pop" hidden>
+  <p class="pop-head"><span class="lamp on"></span><strong id="pop-name">DG-0000</strong></p>
+  <p class="muted" id="pop-read"></p>
+  <label class="field"><span data-t="conn.nameLabel">Navn på måleren</span>
+    <input id="dev-name" type="text" maxlength="40" autocomplete="off" data-t-ph="conn.namePlaceholder"></label>
+  <p class="muted small" data-t="conn.autoOff"></p>
+  <button id="btn-disconnect" type="button" class="wide" data-t="conn.disconnect">Koble fra</button>
+</div>
 
-  <section class="readings" aria-label="Målinger nå">
-    <div><span class="r-val" id="temp">–</span><span class="r-lbl">temperatur</span></div>
-    <div><span class="r-val" id="rh">–</span><span class="r-lbl">fuktighet</span></div>
-    <div><span class="r-val" id="bat">–</span><span class="r-lbl">batteri</span></div>
-  </section>
+<main id="main">
+  <p class="nosupport" id="nosupport" hidden data-t="err.noBluetooth"></p>
 
-  <p class="warn" id="warn" hidden></p>
+  <section class="hero" aria-live="polite">
+    <p class="who" id="who" hidden><span id="who-name"></span> <span class="id" id="who-id"></span></p>
 
-  <div class="actions">
-    <button id="btn-connect" class="primary">Koble til måler</button>
-    <button id="btn-hist" disabled>Hent historikk</button>
-    <button id="btn-csv" disabled>Last ned CSV</button>
-  </div>
-
-  <section class="history" aria-labelledby="hist-h">
-    <h2 id="hist-h">Temperatur per time</h2>
-    <p class="muted" id="hist-note">Historikken hentes fra måleren. Den holder ca. 42 døgn.</p>
-    <svg class="chart" id="chart" viewBox="0 0 360 240" height="240" role="img" aria-label="Graf over temperatur per time"></svg>
-  </section>
-
-  <details class="debug">
-    <summary>Feilsøking</summary>
-    <dl id="debug-list"></dl>
-    <h3>Oppdater firmware</h3>
-    <p class="muted" id="ota-help">Ta ut batteriet og sett det inn igjen. Koble til innen 3 minutter og trykk Oppdater.</p>
-    <p id="ota-latest">Ser etter nyeste firmware…</p>
-    <div class="ota">
-      <button id="btn-ota-latest" class="primary" disabled>Oppdater til nyeste</button>
+    <!-- vilt -->
+    <div class="v-only">
+      <p class="big"><span id="dg-value">0,0</span><span class="unit" data-t="unit.dg">døgngrader</span></p>
+      <div class="gauge" id="gauge"></div>
     </div>
+
+    <!-- restaurant -->
+    <div class="r-only">
+      <p class="big serif"><span id="day-value">Dag –</span></p>
+      <div class="track" aria-hidden="true"><div class="track-fill" id="day-fill"></div></div>
+    </div>
+
+    <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
+  </section>
+
+  <section class="readings" aria-label="Målinger">
+    <div class="rd rd-rh"><span class="v" id="rh">–</span><span class="l" data-t="read.rh">fuktighet</span><span class="band r-only" id="rh-band"></span><span class="band adv"><span data-t="read.dew">duggpunkt</span> <span id="dew">–</span></span></div>
+    <div class="rd rd-t"><span class="v" id="temp">–</span><span class="l" data-t="read.temp">temperatur</span><span class="band r-only" id="t-band"></span></div>
+    <div class="rd rd-bat"><span class="v" id="bat">–</span><span class="l"><span data-t="read.battery">batteri</span> <span id="bat-pct"></span></span></div>
+  </section>
+
+  <section class="weights r-only" aria-labelledby="w-h">
+    <h2 id="w-h" data-t="rest.weight">Vekt</h2>
+    <div class="wrow">
+      <label class="field"><span data-t="rest.weightStart">Startvekt, kg</span><input id="w-start" type="number" inputmode="decimal" min="0" step="0.01"></label>
+      <label class="field"><span data-t="rest.weightNow">Vekt nå, kg</span><input id="w-now" type="number" inputmode="decimal" min="0" step="0.01"></label>
+      <p class="shrink" id="shrink"></p>
+    </div>
+  </section>
+
+  <section class="advice" aria-labelledby="adv-h">
+    <h2 id="adv-h" data-t="adv.title">Dette må du passe på</h2>
+    <ul id="advice"></ul>
+  </section>
+
+  <section class="history adv" aria-labelledby="hist-h">
+    <div class="sec-head">
+      <h2 id="hist-h" data-t="hist.title">Temperatur og fuktighet per time</h2>
+      <div class="btns">
+        <button id="btn-hist" type="button" disabled data-t="hist.fetch">Hent historikk</button>
+        <button id="btn-csv" type="button" disabled data-t="hist.csv">Last ned CSV</button>
+      </div>
+    </div>
+    <p class="legend"><span class="sw sw-t"></span><span data-t="hist.legendTemp">temperatur °C</span> <span class="sw sw-rh"></span><span data-t="hist.legendRh">fuktighet %</span></p>
+    <svg class="chart" id="chart" viewBox="0 0 360 240" height="240" role="img"></svg>
+    <p class="muted" id="hist-note"></p>
+  </section>
+
+  <section class="details adv" aria-labelledby="dbg-h">
+    <h2 id="dbg-h" data-t="dbg.title">Detaljer</h2>
+    <dl id="debug-list"></dl>
+
+    <h3 data-t="ota.title">Oppdater firmware</h3>
+    <p class="muted" data-t="ota.help"></p>
+    <p id="ota-latest" data-t="ota.latestLoading"></p>
+    <div class="btns"><button id="btn-ota-latest" class="primary" type="button" disabled>–</button></div>
     <details class="ota-file">
-      <summary>Bruk egen fil</summary>
-      <div class="ota">
+      <summary data-t="ota.ownFile">Bruk egen fil</summary>
+      <div class="btns">
         <input type="file" id="ota-file" accept=".bin">
-        <button id="btn-ota" disabled>Oppdater med fila</button>
+        <button id="btn-ota" type="button" disabled data-t="ota.updateFile">Oppdater med fila</button>
       </div>
     </details>
     <progress id="ota-progress" max="1" value="0" hidden></progress>
     <p id="ota-status" role="status"></p>
-    <h3>Logg</h3>
-    <pre id="log"></pre>
-  </details>
 
-  <p class="nosupport" id="nosupport" hidden>
-    Denne nettleseren kan ikke bruke Bluetooth. Bruk Chrome eller Edge på Android, Windows eller Mac.
-    På iPhone og iPad: bruk appen Bluefy.
-  </p>
+    <h3 data-t="dbg.log">Logg</h3>
+    <pre id="log"></pre>
+  </section>
 </main>
 
+<dialog id="settings">
+  <form method="dialog">
+    <h2 data-t="settings.title">Innstillinger</h2>
+    <fieldset>
+      <legend data-t="settings.use">Bruk</legend>
+      <label class="radio"><input type="radio" name="use" value="vilt"><span data-t="use.vilt">Vilt</span></label>
+      <label class="radio"><input type="radio" name="use" value="restaurant"><span data-t="use.restaurant">Restaurant</span></label>
+    </fieldset>
+    <fieldset class="v-only">
+      <legend data-t="settings.target">Mål</legend>
+      <div class="chips" id="target-vilt"></div>
+      <p class="muted small" data-t="settings.targetHelpVilt"></p>
+    </fieldset>
+    <fieldset class="r-only">
+      <legend data-t="settings.targetDays">Mål, dager</legend>
+      <div class="chips" id="target-days"></div>
+      <p class="muted small" data-t="settings.targetHelpRest"></p>
+    </fieldset>
+    <fieldset>
+      <legend data-t="settings.lang">Språk</legend>
+      <label class="radio"><input type="radio" name="lang" value="nb"><span>Norsk</span></label>
+      <label class="radio"><input type="radio" name="lang" value="en"><span>English</span></label>
+    </fieldset>
+    <button class="primary wide" value="close" data-t="settings.close">Lukk</button>
+  </form>
+</dialog>
+
 <footer class="foot">
-  <p>Måleren kobler fra av seg selv etter 5 minutter for å spare batteri. <a href="?demo">Se demo uten måler</a></p>
-  <p class="build" id="build">© Hans Einar Steinsland</p>
+  <p class="build" id="build"></p>
 </footer>
 </body>
 </html>
