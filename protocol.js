@@ -97,6 +97,13 @@ export const SET_SERVICE = 'd6a10007' + UUID_BASE;
 export const SET_CHAR = 'd6a10008' + UUID_BASE;
 export const CMD_CHAR = 'd6a10009' + UUID_BASE;   // fra 0.5.8
 export const CMD_OTA_OPEN = 0x01;
+export const CMD_NEW_PERIOD = 0x02;   // fra 0.6.0
+
+// Versjon "0.6.0" -> 600 for sammenligning. Ukjent -> 0.
+export function fwNum(v) {
+  const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v || '');
+  return m ? Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3]) : 0;
+}
 export const SET_LIMITS = { dg: [1, 999], days: [1, 99] };
 export const USE_CODES = ['vilt', 'restaurant'];
 

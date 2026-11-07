@@ -54,6 +54,7 @@
     <p class="sub r-only" id="rest-sub"></p>
     <div class="track" aria-hidden="true"><div class="track-fill" id="goal-fill"></div></div>
 
+    <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
     <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
   </section>
 
@@ -186,6 +187,17 @@
     </details>
 
     <p class="build small" id="build-menu"></p>
+  </form>
+</dialog>
+
+<dialog id="confirm-newp" class="confirm">
+  <form method="dialog">
+    <h2 data-t="newp.title">Start ny periode?</h2>
+    <p id="newp-text"></p>
+    <div class="btns">
+      <button type="submit" value="cancel" autofocus data-t="newp.cancel">Avbryt</button>
+      <button type="submit" value="ok" class="danger" data-t="newp.ok">Ja, nullstill</button>
+    </div>
   </form>
 </dialog>
 

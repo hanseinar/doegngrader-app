@@ -257,3 +257,9 @@ dialog.menu .links a { color: var(--accent); }
 dialog.menu .build { color: var(--muted); margin-top: .8rem; }
 
 .advice a.more { color: var(--accent); font-size: .9em; white-space: nowrap; }
+
+/* ---------- ny periode ---------- */
+.hero-actions { margin-top: .8rem; }
+dialog.confirm { width: min(26rem, calc(100vw - 2rem)); }
+dialog.confirm h2 { margin-top: 0; }
+button.danger { background: var(--bad); border-color: var(--bad); color: #fff; }

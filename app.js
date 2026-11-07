@@ -329,6 +329,8 @@ function render() {
   }
   setGauge();
   $('btn-refresh').hidden = !connected();
+  // ny periode fra appen krever firmware 0.6.0
+  $('btn-newp').hidden = !(connected() && state.chars.cmd && P.fwNum(state.fw) >= P.fwNum('0.6.0'));
   renderChart(per);
   renderPeriodNote();
   renderForecast(s);
@@ -797,6 +799,27 @@ function askPosition() {
   }, (err) => { $('fc-pos').textContent = t('fc.posFailed', { msg: err.message }); }, { maximumAge: 3600e3, timeout: 20000 });
 }
 
+// ---------- ny periode fra appen (0.6.0) ----------
+function askNewPeriod() {
+  const dlg = $('confirm-newp');
+  $('newp-text').textContent = t('newp.text', { name: devInfo().name || (state.device ? state.device.name : '') });
+  dlg.returnValue = '';
+  dlg.showModal();
+}
+
+async function doNewPeriod() {
+  try {
+    await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_NEW_PERIOD]));
+    await new Promise((r) => setTimeout(r, 800));   // måleren måler og lagrer først
+    if (!state.demo) onStatus(await state.chars.status.readValue());
+    log(t('newp.done'));
+    state.history = []; state.histInfo = null;
+    fetchHistory();
+  } catch (e) {
+    log(t('newp.failed', { msg: e.message }));
+  }
+}
+
 // ---------- byggeinfo ----------
 async function loadBuildInfo() {
   const el = $('build');
@@ -916,9 +939,19 @@ async function runOta(source) {
 function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.5.8';
+  state.fw = '0.6.0';
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
-  state.chars.cmd = { async writeValueWithResponse() { state.diag.otaMinutesLeft = 3; } };
+  state.chars.cmd = { async writeValueWithResponse(b) {
+    if (b[0] === P.CMD_OTA_OPEN) state.diag.otaMinutesLeft = 3;
+    if (b[0] === P.CMD_NEW_PERIOD) {   // demo: ny periode
+      const v = new DataView(new Uint8Array(21).buffer);
+      const o = state.status;
+      v.setUint8(0, 1); v.setUint8(1, 0x60); v.setUint16(2, 0, true); v.setInt16(4, Math.round(o.tempC * 100), true);
+      v.setUint8(6, o.rh); v.setUint16(7, o.vbatMv, true); v.setUint8(9, 0); v.setUint32(10, 0, true);
+      v.setUint16(14, o.period + 1, true);
+      onStatus(v);
+    }
+  } };
   state.model = 'LYWSD03MMC B1.1';
   // innstillinger i «måleren», samme bytes som firmwaren
   let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy });
@@ -929,7 +962,7 @@ function demoConnect() {
   demoHistory(false);
   const b = new Uint8Array(21), v = new DataView(b.buffer);
   const sum = Math.round(L.dgFromRecords(L.currentPeriod(state.history, state.histInfo.psHour).records) * 28800);
-  v.setUint8(0, 1); v.setUint8(1, 0x58); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
+  v.setUint8(0, 1); v.setUint8(1, 0x60); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
   v.setUint8(6, 82); v.setUint16(7, 2931, true); v.setUint8(9, 61); v.setUint32(10, sum, true);
   v.setUint16(14, 14, true); v.setUint16(16, 7843, true); v.setUint16(18, 47012, true);
   renderConn('on');
@@ -970,6 +1003,8 @@ function init() {
   $('m-adv').addEventListener('click', () => { settings.mode = 'adv'; saveSettings(); applyMode(); render(); });
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-refresh').addEventListener('click', refreshAll);
+  $('btn-newp').addEventListener('click', askNewPeriod);
+  $('confirm-newp').addEventListener('close', () => { if ($('confirm-newp').returnValue === 'ok') doNewPeriod(); });
   for (const r of document.querySelectorAll('#settings input[name=use]')) r.addEventListener('change', (e) => { settings.use = e.target.value; applyUse(); applyTargetFields(); settingChanged(); });
   for (const r of document.querySelectorAll('#settings input[name=restby]')) r.addEventListener('change', (e) => { settings.restBy = e.target.value; applyTargetFields(); settingChanged(); });
   for (const b of document.querySelectorAll('#settings [data-step]')) {
