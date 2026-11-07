@@ -4,197 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Døgngrader, bruksanvisning</title>
-<meta name="description" content="Bruksanvisning for døgngrader-måleren, norsk og engelsk, én A4-side.">
+<meta name="description" content="Bruksanvisning for døgngrader-måleren, norsk og engelsk, én A4-side (PDF).">
 <style>
-  @page { size: A4; margin: 7mm; }
-  :root { color-scheme: light; }
-  * { box-sizing: border-box; }
-  html { background: #888; }
-  body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 7.3pt; line-height: 1.26; color: #111; }
-  .sheet { width: 196mm; min-height: 283mm; margin: 6mm auto; background: #fff; padding: 0; }
-  @media screen { .sheet { padding: 7mm; width: 210mm; box-shadow: 0 2px 12px rgba(0,0,0,.4); } }
-  @media screen and (max-width: 820px) { .sheet { width: auto; margin: 0; } html { background: #fff; } }
-  @media print { html { background: #fff; } .sheet { margin: 0; min-height: 0; } .noprint { display: none; } }
-  header { display: flex; align-items: center; gap: 5mm; border-bottom: 1.2pt solid #111; padding-bottom: 2mm; }
-  header .t { flex: 1; }
-  h1 { font-size: 15pt; margin: 0; letter-spacing: .02em; }
-  h1 span { font-weight: 400; color: #555; }
-  header p { margin: .6mm 0 0; font-size: 7.6pt; }
-  .qr { width: 19mm; height: 19mm; }
-  .figs { display: grid; grid-template-columns: 1fr 1fr .77fr; gap: 4mm; margin: 2mm 18mm 1mm; }
-  .fig { width: 100%; height: auto; display: block; }
-  .caps { display: grid; grid-template-columns: 1fr 1fr .77fr; gap: 3mm; font-size: 6.6pt; color: #333; margin: 0 18mm 1.5mm; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
-  .cols > div + div { border-left: .5pt solid #aaa; padding-left: 5mm; }
-  h2 { font-size: 9.2pt; margin: 0 0 1mm; text-transform: uppercase; letter-spacing: .04em; }
-  h3 { font-size: 7.8pt; margin: 2mm 0 .5mm; }
-  p { margin: 0 0 .9mm; }
-  ol, ul { margin: 0 0 .9mm; padding-left: 4mm; }
-  li { margin: 0 0 .3mm; }
-  .n { display: inline-block; width: 3.4mm; height: 3.4mm; border-radius: 50%; background: #b8261b; color: #fff; font-weight: 700; font-size: 6.3pt; text-align: center; line-height: 3.4mm; margin-right: .6mm; }
-  table { border-collapse: collapse; width: 100%; margin: .5mm 0 1mm; }
-  td { padding: .35mm 1mm .35mm 0; vertical-align: top; border-bottom: .3pt solid #ccc; }
-  td:first-child { white-space: nowrap; font-weight: 700; }
-  h3.warn { border-left: 1.4pt solid #b8261b; padding-left: 1.6mm; }
-  ul.warn { padding-left: 5mm; }
-  footer { margin-top: 2mm; border-top: .5pt solid #aaa; padding-top: 1mm; font-size: 6.4pt; color: #444; display: flex; justify-content: space-between; }
-  .noprint { text-align: center; padding: 3mm; font: 11pt Arial, sans-serif; }
-  .noprint a, .noprint button { font: inherit; margin: 0 2mm; }
+  :root { --bg: #f7f6f3; --ink: #1a1614; --muted: #6e645d; --accent: #8a6a36; --edge: #ddd6cf; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #141211; --ink: #f1ece6; --muted: #a39890; --accent: #b8955d; --edge: #3a3330; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 Georgia, serif; }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
+  h1 { font-size: 1.8rem; margin: .4rem 0; }
+  .muted { color: var(--muted); font-family: system-ui, sans-serif; font-size: .95rem; }
+  .btn { display: inline-block; margin: .8rem .6rem .8rem 0; padding: .7rem 1.2rem; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font: 600 1rem system-ui, sans-serif; }
+  .btn.ghost { background: none; color: var(--accent); border: 1px solid var(--edge); }
+  .figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+  figure { margin: 0; background: #fff; border-radius: 12px; padding: .6rem; }
+  figure img { width: 100%; height: auto; display: block; }
+  figcaption { color: #444; font: .85rem/1.35 system-ui, sans-serif; margin-top: .3rem; }
 </style>
 </head>
 <body>
-<p class="noprint"><button onclick="print()">Skriv ut / Print</button> <a href="doegngrader-bruksanvisning.pdf">PDF</a> <a href="../">Til appen / To the app</a></p>
-<main class="sheet">
-<header>
-  <div class="t">
-    <h1>DØGNGRADER <span>/ Degree days</span></h1>
-    <p>Måler for modning av kjøtt. Virker alene. Appen er et tillegg. &nbsp;·&nbsp; Sensor for ageing meat. Works on its own. The app is an add-on.</p>
+<div class="wrap">
+  <h1>Bruksanvisning <span class="muted">/ User guide</span></h1>
+  <p class="muted">Én A4-side, norsk og engelsk. Versjon 1.1, firmware 0.6.0.</p>
+  <a class="btn" href="doegngrader-bruksanvisning.pdf">Åpne PDF / Open PDF</a><a class="btn ghost" href="../">Til appen / To the app</a>
+  <div class="figs">
+    <figure><img src="display.png" alt="Displayet"><figcaption>1 døgngrader, 2 vilt (–) eller restaurant (=), 3 temperatur, 4 smilefjes, 5 Bluetooth, 6 batteri.</figcaption></figure>
+    <figure><img src="nullstill.png" alt="Ny periode"><figcaption>A Ny periode: binders fra Reset til Gnd i 1 sekund. Batteriet med + opp.</figcaption></figure>
+    <figure><img src="apne.png" alt="Åpne bakplaten"><figcaption>B Lirk av bakplaten med en flat skrutrekker i sporet nederst.</figcaption></figure>
   </div>
-  <svg class="qr" role="img" aria-label="QR: dg.info-web.no" version="1.1" viewBox="0 0 27 27" xmlns="http://www.w3.org/2000/svg"><path d="M1,1H2V2H1zM2,1H3V2H2zM3,1H4V2H3zM4,1H5V2H4zM5,1H6V2H5zM6,1H7V2H6zM7,1H8V2H7zM10,1H11V2H10zM12,1H13V2H12zM15,1H16V2H15zM16,1H17V2H16zM19,1H20V2H19zM20,1H21V2H20zM21,1H22V2H21zM22,1H23V2H22zM23,1H24V2H23zM24,1H25V2H24zM25,1H26V2H25zM1,2H2V3H1zM7,2H8V3H7zM9,2H10V3H9zM10,2H11V3H10zM12,2H13V3H12zM13,2H14V3H13zM14,2H15V3H14zM15,2H16V3H15zM16,2H17V3H16zM17,2H18V3H17zM19,2H20V3H19zM25,2H26V3H25zM1,3H2V4H1zM3,3H4V4H3zM4,3H5V4H4zM5,3H6V4H5zM7,3H8V4H7zM10,3H11V4H10zM11,3H12V4H11zM12,3H13V4H12zM13,3H14V4H13zM16,3H17V4H16zM19,3H20V4H19zM21,3H22V4H21zM22,3H23V4H22zM23,3H24V4H23zM25,3H26V4H25zM1,4H2V5H1zM3,4H4V5H3zM4,4H5V5H4zM5,4H6V5H5zM7,4H8V5H7zM10,4H11V5H10zM13,4H14V5H13zM15,4H16V5H15zM16,4H17V5H16zM17,4H18V5H17zM19,4H20V5H19zM21,4H22V5H21zM22,4H23V5H22zM23,4H24V5H23zM25,4H26V5H25zM1,5H2V6H1zM3,5H4V6H3zM4,5H5V6H4zM5,5H6V6H5zM7,5H8V6H7zM9,5H10V6H9zM10,5H11V6H10zM12,5H13V6H12zM13,5H14V6H13zM15,5H16V6H15zM16,5H17V6H16zM19,5H20V6H19zM21,5H22V6H21zM22,5H23V6H22zM23,5H24V6H23zM25,5H26V6H25zM1,6H2V7H1zM7,6H8V7H7zM10,6H11V7H10zM13,6H14V7H13zM16,6H17V7H16zM17,6H18V7H17zM19,6H20V7H19zM25,6H26V7H25zM1,7H2V8H1zM2,7H3V8H2zM3,7H4V8H3zM4,7H5V8H4zM5,7H6V8H5zM6,7H7V8H6zM7,7H8V8H7zM9,7H10V8H9zM11,7H12V8H11zM13,7H14V8H13zM15,7H16V8H15zM17,7H18V8H17zM19,7H20V8H19zM20,7H21V8H20zM21,7H22V8H21zM22,7H23V8H22zM23,7H24V8H23zM24,7H25V8H24zM25,7H26V8H25zM10,8H11V9H10zM12,8H13V9H12zM14,8H15V9H14zM16,8H17V9H16zM17,8H18V9H17zM1,9H2V10H1zM3,9H4V10H3zM5,9H6V10H5zM7,9H8V10H7zM10,9H11V10H10zM12,9H13V10H12zM13,9H14V10H13zM14,9H15V10H14zM15,9H16V10H15zM16,9H17V10H16zM17,9H18V10H17zM21,9H22V10H21zM24,9H25V10H24zM1,10H2V11H1zM3,10H4V11H3zM9,10H10V11H9zM12,10H13V11H12zM18,10H19V11H18zM19,10H20V11H19zM25,10H26V11H25zM3,11H4V12H3zM4,11H5V12H4zM6,11H7V12H6zM7,11H8V12H7zM10,11H11V12H10zM13,11H14V12H13zM14,11H15V12H14zM18,11H19V12H18zM19,11H20V12H19zM21,11H22V12H21zM23,11H24V12H23zM24,11H25V12H24zM25,11H26V12H25zM2,12H3V13H2zM4,12H5V13H4zM5,12H6V13H5zM6,12H7V13H6zM10,12H11V13H10zM12,12H13V13H12zM13,12H14V13H13zM14,12H15V13H14zM17,12H18V13H17zM19,12H20V13H19zM24,12H25V13H24zM3,13H4V14H3zM4,13H5V14H4zM7,13H8V14H7zM8,13H9V14H8zM12,13H13V14H12zM14,13H15V14H14zM16,13H17V14H16zM17,13H18V14H17zM19,13H20V14H19zM22,13H23V14H22zM24,13H25V14H24zM25,13H26V14H25zM2,14H3V15H2zM3,14H4V15H3zM4,14H5V15H4zM9,14H10V15H9zM10,14H11V15H10zM11,14H12V15H11zM12,14H13V15H12zM17,14H18V15H17zM18,14H19V15H18zM19,14H20V15H19zM22,14H23V15H22zM25,14H26V15H25zM1,15H2V16H1zM3,15H4V16H3zM6,15H7V16H6zM7,15H8V16H7zM9,15H10V16H9zM10,15H11V16H10zM14,15H15V16H14zM17,15H18V16H17zM18,15H19V16H18zM20,15H21V16H20zM23,15H24V16H23zM24,15H25V16H24zM25,15H26V16H25zM2,16H3V17H2zM3,16H4V17H3zM5,16H6V17H5zM6,16H7V17H6zM8,16H9V17H8zM9,16H10V17H9zM11,16H12V17H11zM12,16H13V17H12zM14,16H15V17H14zM17,16H18V17H17zM18,16H19V17H18zM19,16H20V17H19zM21,16H22V17H21zM24,16H25V17H24zM1,17H2V18H1zM3,17H4V18H3zM4,17H5V18H4zM5,17H6V18H5zM7,17H8V18H7zM11,17H12V18H11zM13,17H14V18H13zM14,17H15V18H14zM17,17H18V18H17zM18,17H19V18H18zM19,17H20V18H19zM20,17H21V18H20zM21,17H22V18H21zM22,17H23V18H22zM9,18H10V19H9zM10,18H11V19H10zM12,18H13V19H12zM13,18H14V19H13zM16,18H17V19H16zM17,18H18V19H17zM21,18H22V19H21zM22,18H23V19H22zM24,18H25V19H24zM25,18H26V19H25zM1,19H2V20H1zM2,19H3V20H2zM3,19H4V20H3zM4,19H5V20H4zM5,19H6V20H5zM6,19H7V20H6zM7,19H8V20H7zM10,19H11V20H10zM12,19H13V20H12zM13,19H14V20H13zM14,19H15V20H14zM16,19H17V20H16zM17,19H18V20H17zM19,19H20V20H19zM21,19H22V20H21zM22,19H23V20H22zM24,19H25V20H24zM25,19H26V20H25zM1,20H2V21H1zM7,20H8V21H7zM13,20H14V21H13zM14,20H15V21H14zM15,20H16V21H15zM17,20H18V21H17zM21,20H22V21H21zM22,20H23V21H22zM24,20H25V21H24zM25,20H26V21H25zM1,21H2V22H1zM3,21H4V22H3zM4,21H5V22H4zM5,21H6V22H5zM7,21H8V22H7zM9,21H10V22H9zM11,21H12V22H11zM12,21H13V22H12zM15,21H16V22H15zM17,21H18V22H17zM18,21H19V22H18zM19,21H20V22H19zM20,21H21V22H20zM21,21H22V22H21zM22,21H23V22H22zM24,21H25V22H24zM25,21H26V22H25zM1,22H2V23H1zM3,22H4V23H3zM4,22H5V23H4zM5,22H6V23H5zM7,22H8V23H7zM10,22H11V23H10zM12,22H13V23H12zM16,22H17V23H16zM17,22H18V23H17zM20,22H21V23H20zM21,22H22V23H21zM22,22H23V23H22zM23,22H24V23H23zM1,23H2V24H1zM3,23H4V24H3zM4,23H5V24H4zM5,23H6V24H5zM7,23H8V24H7zM9,23H10V24H9zM11,23H12V24H11zM14,23H15V24H14zM16,23H17V24H16zM21,23H22V24H21zM25,23H26V24H25zM1,24H2V25H1zM7,24H8V25H7zM10,24H11V25H10zM11,24H12V25H11zM12,24H13V25H12zM16,24H17V25H16zM17,24H18V25H17zM18,24H19V25H18zM19,24H20V25H19zM21,24H22V25H21zM22,24H23V25H22zM24,24H25V25H24zM1,25H2V26H1zM2,25H3V26H2zM3,25H4V26H3zM4,25H5V26H4zM5,25H6V26H5zM6,25H7V26H6zM7,25H8V26H7zM9,25H10V26H9zM10,25H11V26H10zM11,25H12V26H11zM13,25H14V26H13zM16,25H17V26H16zM17,25H18V26H17zM18,25H19V26H18zM19,25H20V26H19zM20,25H21V26H20zM24,25H25V26H24zM25,25H26V26H25z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none"/></svg>
-</header>
-
-<div class="figs"><svg viewBox="0 0 260 170" class="fig" role="img" aria-label="Displayet / The display">
-  <rect x="4" y="4" width="252" height="162" rx="18" fill="#f4f4f2" stroke="#222" stroke-width="2"/>
-  <rect x="22" y="20" width="216" height="128" rx="6" fill="#dfe3d6" stroke="#555"/>
-  <!-- batteri og BT -->
-  <rect x="32" y="30" width="20" height="10" rx="1.5" fill="none" stroke="#222" stroke-width="1.6"/><rect x="52" y="33" width="2.5" height="4" fill="#222"/>
-  <path d="M36 52 l8 7 -4 3.5 0 -14 4 3.5 -8 7" fill="none" stroke="#222" stroke-width="1.6"/>
-  <!-- stort tall -->
-  <text x="74" y="86" font-family="'DSEG7 Classic', 'Courier New', monospace" font-size="54" font-weight="700" fill="#222">23.6</text>
-  <!-- symbol -->
-  <rect x="204" y="52" width="18" height="3.5" fill="#222"/><rect x="204" y="61" width="18" height="3.5" fill="#222"/>
-  <!-- smilefjes -->
-  <text x="34" y="134" font-family="monospace" font-size="20" font-weight="700" fill="#222">(^_^)</text>
-  <!-- lite tall -->
-  <text x="170" y="136" font-family="'Courier New', monospace" font-size="32" font-weight="700" fill="#222">6</text>
-  <!-- nummer -->
-  <g font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#fff">
-    <circle cx="150" cy="18" r="8" fill="#b8261b"/><text x="150" y="22" text-anchor="middle">1</text>
-    <circle cx="238" cy="58" r="8" fill="#b8261b"/><text x="238" y="62" text-anchor="middle">2</text>
-    <circle cx="206" cy="126" r="8" fill="#b8261b"/><text x="206" y="130" text-anchor="middle">3</text>
-    <circle cx="96" cy="148" r="8" fill="#b8261b"/><text x="96" y="152" text-anchor="middle">4</text>
-    <circle cx="66" cy="50" r="8" fill="#b8261b"/><text x="66" y="54" text-anchor="middle">5</text>
-    <circle cx="66" cy="30" r="8" fill="#b8261b"/><text x="66" y="34" text-anchor="middle">6</text>
-  </g>
-</svg><svg viewBox="0 0 260 170" class="fig" role="img" aria-label="Ny periode / New period">
-  <rect x="4" y="4" width="252" height="162" rx="18" fill="#f4f4f2" stroke="#222" stroke-width="2"/>
-  <circle cx="110" cy="85" r="62" fill="#e9e9e6" stroke="#222" stroke-width="1.6"/>
-  <circle cx="110" cy="85" r="44" fill="#c9ccd0" stroke="#555"/>
-  <text x="110" y="82" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#333">CR2032</text>
-  <text x="110" y="98" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#333">+</text>
-  <!-- pads -->
-  <rect x="184" y="56" width="14" height="10" fill="#c8a24a" stroke="#6b5214"/><text x="204" y="65" font-family="Arial, sans-serif" font-size="11" font-weight="700">Reset</text>
-  <rect x="184" y="98" width="14" height="10" fill="#c8a24a" stroke="#6b5214"/><text x="204" y="107" font-family="Arial, sans-serif" font-size="11" font-weight="700">Gnd</text>
-  <!-- binders -->
-  <path d="M186 61 C 160 61 160 103 186 103 M180 61 C 168 61 168 92 176 92 L 176 74" fill="none" stroke="#2a62b8" stroke-width="3" stroke-linecap="round"/>
-  <text x="166" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#2a62b8">1 s</text>
-  <g font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#fff">
-    <circle cx="176" cy="38" r="8" fill="#b8261b"/><text x="176" y="42" text-anchor="middle">A</text>
-  </g>
-</svg><svg viewBox="0 0 200 170" class="fig" role="img" aria-label="Batteri / Battery">
-  <rect x="4" y="4" width="192" height="162" rx="18" fill="#f4f4f2" stroke="#222" stroke-width="2"/>
-  <circle cx="100" cy="85" r="58" fill="#e2e2df" stroke="#222" stroke-width="1.6"/>
-  <path d="M60 50 A 52 52 0 0 0 52 110" fill="none" stroke="#b8261b" stroke-width="3"/>
-  <path d="M46 102 l6 10 6 -10" fill="none" stroke="#b8261b" stroke-width="3"/>
-  <rect x="88" y="36" width="24" height="98" rx="4" fill="#cfd1d4" stroke="#555"/>
-  <g font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#fff">
-    <circle cx="168" cy="38" r="8" fill="#b8261b"/><text x="168" y="42" text-anchor="middle">B</text>
-  </g>
-</svg></div>
-<div class="caps">
-  <div>Displayet / The display (skisse / sketch)</div>
-  <div><b>A</b> Under batterilokket: binders fra Reset til Gnd i 1 s. / Under the battery cover: paperclip from Reset to Gnd for 1 s.</div>
-  <div><b>B</b> Lokket vris mot klokka. / The cover twists anticlockwise.</div>
 </div>
-
-<div class="cols">
-<div lang="nb">
-  <h2>Norsk</h2>
-  <h3>Displayet</h3>
-  <table>
-    <tr><td><span class="n">1</span>Stort tall</td><td>Døgngrader i perioden (0,0 til 199,9). Ett døgn ved 5 °C gir 5 døgngrader. Minusgrader teller ikke.</td></tr>
-    <tr><td><span class="n">2</span>Symbol</td><td><b>–</b> vilt, <b>=</b> restaurant.</td></tr>
-    <tr><td><span class="n">3</span>Lite tall</td><td>Lufttemperaturen nå, °C. Måles hvert 5. minutt.</td></tr>
-    <tr><td><span class="n">4</span>Smilefjes</td><td>Av til målet er nådd, så glad. Mål fra fabrikk: 40 døgngrader. Kan endres i appen.</td></tr>
-    <tr><td><span class="n">5</span>Bluetooth</td><td>Lyser mens appen er tilkoblet.</td></tr>
-    <tr><td><span class="n">6</span>Batteri</td><td>Lyser når batteriet bør byttes.</td></tr>
-  </table>
-  <h3>Ny periode (når kjøttet henges)</h3>
-  <ol>
-    <li>Vri av batterilokket <b>B</b>.</li>
-    <li>Hold en binders fra punktet merket <b>Reset</b> til <b>Gnd</b> i 1 sekund <b>A</b>.</li>
-    <li>Alle segmenter lyser kort, så vises <b>0.0</b>. Sett på lokket.</li>
-  </ol>
-  <p>Måleren husker summen ved batteribytte og strømbrudd. Bare binderset starter på nytt.</p>
-  <h3>Plassering</h3>
-  <p>Heng måleren i lufta ved kjøttet, i samme høyde, ikke i sol eller trekk. Den måler lufta, ikke kjøttet. Den tåler ikke vann eller å ligge i kjøttet.</p>
-  <h3>Bytte batteri</h3>
-  <p>CR2032. Vri av lokket, ta ut det gamle og legg i det nye med <b>+</b> ut mot lokket. Ved oppstart lyser alle segmenter, så vises versjonen. Døgngradene beholdes.</p>
-  <h3>Appen (valgfritt)</h3>
-  <p>Åpne <b>dg.info-web.no</b> (QR-koden) i Chrome eller Edge. Trykk «Ikke tilkoblet» og velg måleren (DG-xxxx). Appen viser fuktighet, råd, historikk per time, anslag og lar deg endre mål og bruk (vilt eller restaurant). Firmware kan bare oppdateres de første 3 minuttene etter at batteriet er satt inn.</p>
-  <h3 class="warn">Dette må du passe på (vilt)</h3>
-  <ul class="warn">
-    <li>Ikke under 12 °C det første døgnet (kuldekontraksjon gir seigt kjøtt).</li>
-    <li>Ideelt 8 til 10 °C etter første døgn. Garasje går når døgnsnittet er under 15 °C.</li>
-    <li>Over 15 °C: spyfluer. Egg klekker på under ett døgn ved 20 °C.</li>
-    <li>Over 90 % fuktighet: fare for kondens og mugg. Sørg for luft rundt skrotten.</li>
-    <li>Vanlig mål: 40 til 50 døgngrader, kalv rundt 40, eldre dyr 60 til 120.</li>
-  </ul>
-  <h3>Restaurant</h3>
-  <p>Velg restaurant i appen. Symbolet viser <b>=</b>. Smilefjeset følger dager siden ny periode (fra fabrikk 28) eller døgngrader, etter valg. Tørrmodning av storfe: 0 til 4 °C og 75 til 85 % fuktighet, vanligvis 14 til 35 dager.</p>
-  <h3>Feilsøking</h3>
-  <ul>
-    <li>Ingenting i displayet: bytt batteri.</li>
-    <li>Appen finner ikke måleren: slå på Bluetooth, gå nær måleren, bruk Chrome eller Edge. iPhone og iPad: appen Bluefy.</li>
-    <li>Fikk ikke oppdatert firmware: ta batteriet ut og inn, og koble til innen 3 minutter.</li>
-  </ul>
-  <p>Kilder: Norsk Hjortesenter, Kammeret, MLA. Mer i appen under Hjelp.</p>
-</div>
-<div lang="en">
-  <h2>English</h2>
-  <h3>The display</h3>
-  <table>
-    <tr><td><span class="n">1</span>Large number</td><td>Degree days in the period (0.0 to 199.9). One day at 5 °C gives 5 degree days. Sub-zero does not count.</td></tr>
-    <tr><td><span class="n">2</span>Symbol</td><td><b>–</b> game, <b>=</b> restaurant.</td></tr>
-    <tr><td><span class="n">3</span>Small number</td><td>Air temperature now, °C. Measured every 5 minutes.</td></tr>
-    <tr><td><span class="n">4</span>Smiley</td><td>Off until the target is reached, then happy. Factory target: 40 degree days. Can be changed in the app.</td></tr>
-    <tr><td><span class="n">5</span>Bluetooth</td><td>On while the app is connected.</td></tr>
-    <tr><td><span class="n">6</span>Battery</td><td>On when the battery should be replaced.</td></tr>
-  </table>
-  <h3>New period (when the meat is hung)</h3>
-  <ol>
-    <li>Twist off the battery cover <b>B</b>.</li>
-    <li>Hold a paperclip from the point marked <b>Reset</b> to <b>Gnd</b> for 1 second <b>A</b>.</li>
-    <li>All segments light briefly, then <b>0.0</b> shows. Refit the cover.</li>
-  </ol>
-  <p>The sensor keeps the sum through battery changes and power loss. Only the paperclip starts over.</p>
-  <h3>Placement</h3>
-  <p>Hang the sensor in the air next to the meat, at the same height, out of sun and draught. It measures the air, not the meat. It does not tolerate water or being placed in the meat.</p>
-  <h3>Replacing the battery</h3>
-  <p>CR2032. Twist off the cover, remove the old cell and insert the new one with <b>+</b> facing the cover. At start-up all segments light, then the version shows. The degree days are kept.</p>
-  <h3>The app (optional)</h3>
-  <p>Open <b>dg.info-web.no</b> (the QR code) in Chrome or Edge. Tap “Connect” and choose the sensor (DG-xxxx). The app shows humidity, advice, hourly history and estimates, and lets you change the target and use (game or restaurant). Firmware can only be updated during the first 3 minutes after the battery is inserted.</p>
-  <h3 class="warn">Watch out for (game)</h3>
-  <ul class="warn">
-    <li>Not below 12 °C during the first day (cold shortening makes the meat tough).</li>
-    <li>Ideally 8 to 10 °C after the first day. A garage works while the daily average stays below 15 °C.</li>
-    <li>Above 15 °C: blowflies. Eggs hatch in under a day at 20 °C.</li>
-    <li>Above 90 % humidity: risk of condensation and mould. Keep air moving around the carcass.</li>
-    <li>Usual target: 40 to 50 degree days, calf around 40, older animals 60 to 120.</li>
-  </ul>
-  <h3>Restaurant</h3>
-  <p>Choose restaurant in the app. The symbol shows <b>=</b>. The smiley follows days since the new period (factory setting 28) or degree days, as chosen. Dry ageing of beef: 0 to 4 °C and 75 to 85 % humidity, usually 14 to 35 days.</p>
-  <h3>Troubleshooting</h3>
-  <ul>
-    <li>Blank display: replace the battery.</li>
-    <li>The app cannot find the sensor: turn on Bluetooth, move close, use Chrome or Edge. iPhone and iPad: the Bluefy app.</li>
-    <li>Firmware update refused: take the battery out and in, and connect within 3 minutes.</li>
-  </ul>
-  <p>Sources: Norwegian Deer Centre, Kammeret, MLA. More in the app under Help.</p>
-</div>
-</div>
-
-<footer><span>© 2026 Hans Einar Steinsland · dg.info-web.no</span><span>Firmware 0.5.7 · Bruksanvisning / User guide 1.0</span></footer>
-</main>
 </body>
 </html>
