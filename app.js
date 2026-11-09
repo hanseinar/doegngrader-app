@@ -469,6 +469,7 @@ function renderDebug() {
   if (state.device) rows.push([t('dbg.device'), state.device.name]);
   if (state.fw) rows.push([t('dbg.firmware'), state.fw]);
   if (state.model) rows.push([t('dbg.model'), state.model]);
+  if (state.serial) rows.push([t('dbg.serial'), state.serial]);
   if (s) {
     rows.push([t('dbg.read'), state.statusAt.toLocaleTimeString(locale())]);
     rows.push([t('dbg.period'), s.period]);
@@ -533,6 +534,10 @@ async function connect() {
       const set = await server.getPrimaryService(P.SET_SERVICE);
       state.chars.set = await set.getCharacteristic(P.SET_CHAR);
       try { state.chars.cmd = await set.getCharacteristic(P.CMD_CHAR); } catch (e) { state.chars.cmd = null; }
+      try {
+        state.serial = P.parseSerial(await (await set.getCharacteristic(P.SERIAL_CHAR)).readValue());
+        setDevInfo({ serial: state.serial });
+      } catch (e) { state.serial = null; }
     } catch (e) { state.chars.set = null; state.chars.cmd = null; }
     state.chars.status.addEventListener('characteristicvaluechanged', (ev) => onStatus(ev.target.value));
     onStatus(await state.chars.status.readValue());
@@ -939,7 +944,8 @@ async function runOta(source) {
 function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.6.0';
+  state.fw = '0.6.1';
+  state.serial = 'A4C1389DDE40';
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
   state.chars.cmd = { async writeValueWithResponse(b) {
     if (b[0] === P.CMD_OTA_OPEN) state.diag.otaMinutesLeft = 3;

@@ -96,6 +96,12 @@ export function periodStartMs(info, readAtMs) {
 export const SET_SERVICE = 'd6a10007' + UUID_BASE;
 export const SET_CHAR = 'd6a10008' + UUID_BASE;
 export const CMD_CHAR = 'd6a10009' + UUID_BASE;   // fra 0.5.8
+export const SERIAL_CHAR = 'd6a1000a' + UUID_BASE;   // fra 0.6.1: hele MAC, 12 hex
+export function parseSerial(buf) {
+  const s = new TextDecoder().decode(buf instanceof DataView ? buf : new DataView(buf.buffer || buf));
+  if (!/^[0-9A-F]{12}$/.test(s)) throw new Error(`Serienummer: ugyldig «${s}»`);
+  return s;
+}
 export const CMD_OTA_OPEN = 0x01;
 export const CMD_NEW_PERIOD = 0x02;   // fra 0.6.0
 
