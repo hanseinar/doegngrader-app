@@ -263,3 +263,10 @@ dialog.menu .build { color: var(--muted); margin-top: .8rem; }
 dialog.confirm { width: min(26rem, calc(100vw - 2rem)); }
 dialog.confirm h2 { margin-top: 0; }
 button.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+/* abonnement under Detaljer */
+dialog.menu #lic-list { display: block; }
+#lic-list dt { margin-top: .4rem; }
+#lic-list dd { font-size: .9em; overflow-wrap: normal; }
+#lic-list dd.ok { color: var(--ok); }
+#lic-list dd.warn { color: var(--bad); }

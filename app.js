@@ -8,6 +8,7 @@
 // Innstillinger og navn på målere lagres i nettleseren (localStorage).
 import * as P from './protocol.js';
 import * as L from './logic.js';
+import * as LIC from './license.js';
 import { translate, pickLang } from './i18n.js';
 
 const HIST_TIMEOUT_MS = 60000;
@@ -464,6 +465,36 @@ function renderChart(per) {
   $('hist-note').textContent = t('hist.summary', { hours: per.records.length, dg: fmt(L.dgFromRecords(per.records)) });
 }
 
+// ---------- abonnement (kunderegister, skjult til license.js er satt opp) ----------
+async function refreshLicense() {
+  const cfg = LIC.config(), sec = $('lic-sec');
+  sec.hidden = !cfg;
+  if (!cfg) return;
+  $('lic-minside').href = cfg.minside;
+  const list = $('lic-list'), note = $('lic-note');
+  list.innerHTML = '';
+  if (!state.serial) { note.textContent = t('lic.noSerial'); return; }
+  note.textContent = t('lic.loading');
+  const serial = state.serial;
+  let res;
+  try { res = await LIC.load(serial); } catch (e) { res = null; }
+  if (serial !== state.serial) return;    // byttet måler i mellomtiden
+  if (!res || (!res.doc && res.verified !== false && res.offline)) { note.textContent = t('lic.error'); return; }
+  if (res.verified === false) { note.textContent = t('lic.bad'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = LIC.view(res.doc, today);
+  const esc = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  list.innerHTML = rows.map((r) => {
+    const name = t('lic.f.' + r.feature) === 'lic.f.' + r.feature ? r.feature : t('lic.f.' + r.feature);
+    const st = r.state === 'expired' ? t('lic.expired', { to: r.to })
+      : r.state === 'cancelled' ? t('lic.cancelled', { to: r.to })
+      : r.to ? t('lic.active', { to: r.to }) : t('lic.activeNoEnd');
+    return `<dt>${esc(name)}</dt><dd class="${r.state === 'active' ? 'ok' : 'warn'}">${esc(st)}</dd>`;
+  }).join('');
+  note.textContent = [rows.length ? '' : t('lic.none'), res.offline ? t('lic.offline') : '', res.verified === null ? t('lic.unverified') : '']
+    .filter(Boolean).join(' ');
+}
+
 function renderDebug() {
   const s = state.status, rows = [];
   if (state.device) rows.push([t('dbg.device'), state.device.name]);
@@ -539,6 +570,7 @@ async function connect() {
         setDevInfo({ serial: state.serial });
       } catch (e) { state.serial = null; }
     } catch (e) { state.chars.set = null; state.chars.cmd = null; }
+    refreshLicense();                     // venter ikke, nettet kan være tregt
     state.chars.status.addEventListener('characteristicvaluechanged', (ev) => onStatus(ev.target.value));
     onStatus(await state.chars.status.readValue());
     await state.chars.status.startNotifications();
@@ -946,6 +978,7 @@ function demoConnect() {
   state.devId = 'DE40';
   state.fw = '0.6.1';
   state.serial = 'A4C1389DDE40';
+  refreshLicense();
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
   state.chars.cmd = { async writeValueWithResponse(b) {
     if (b[0] === P.CMD_OTA_OPEN) state.diag.otaMinutesLeft = 3;
