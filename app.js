@@ -291,6 +291,7 @@ const BOOK_ANCHOR = {
 // ---------- visning ----------
 function render() {
   applyTexts();
+  if (!connected()) renderConn('off');   // pilleteksten styres her, ikke av data-t
   const s = state.status;
   renderMeters();
   const per = period();
