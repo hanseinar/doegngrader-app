@@ -104,6 +104,7 @@ export function parseSerial(buf) {
 }
 export const CMD_OTA_OPEN = 0x01;
 export const CMD_NEW_PERIOD = 0x02;   // fra 0.6.0
+export const CMD_KEEPALIVE = 0x03;    // fra 0.6.3: holder forbindelsen (10 min uten aktivitet)
 
 // Versjon "0.6.0" -> 600 for sammenligning. Ukjent -> 0.
 export function fwNum(v) {
@@ -122,17 +123,18 @@ export function parseSettings(buf) {
     targetDg: v.getUint16(2, true),
     targetDays: v.getUint8(4),
     restBy: v.byteLength >= 6 && (v.getUint8(5) & 1) ? 'dg' : 'days',   // fra 0.5.6
+    smiley: v.byteLength >= 6 && (v.getUint8(5) & 2) !== 0,              // fra 0.6.3
   };
 }
 
-export function buildSettings({ use, targetDg, targetDays, restBy = 'days' }) {
+export function buildSettings({ use, targetDg, targetDays, restBy = 'days', smiley = false }) {
   const u = USE_CODES.indexOf(use);
   if (u < 0) throw new Error(`Ukjent bruk: ${use}`);
   const dg = Math.round(targetDg), days = Math.round(targetDays);
   if (!(dg >= SET_LIMITS.dg[0] && dg <= SET_LIMITS.dg[1])) throw new Error(`Mål utenfor ${SET_LIMITS.dg.join('..')}: ${targetDg}`);
   if (!(days >= SET_LIMITS.days[0] && days <= SET_LIMITS.days[1])) throw new Error(`Dager utenfor ${SET_LIMITS.days.join('..')}: ${targetDays}`);
   const b = new Uint8Array(8);
-  b[0] = 1; b[1] = u; b[2] = dg & 0xff; b[3] = dg >> 8; b[4] = days; b[5] = restBy === 'dg' ? 1 : 0;
+  b[0] = 1; b[1] = u; b[2] = dg & 0xff; b[3] = dg >> 8; b[4] = days; b[5] = (restBy === 'dg' ? 1 : 0) | (smiley ? 2 : 0);
   return b;
 }
 

@@ -1,4 +1,9 @@
-// app.js - nettside for døgngrader-måleren, versjon 2 (Web Bluetooth)
+// app.js - nettside for døgngrader-måleren, versjon 3 (Web Bluetooth)
+//
+// Versjon 3 (2026-11-22): ingen Enkel/Avansert. Forsiden har hovedtall, tre
+// instrumenter (temperatur, fuktighet, duggpunkt) som er opplyst bare når
+// måleren er tilkoblet, og grafen bak en trekant. Resten ligger under
+// tannhjulet. Notat og vekt er tatt ut (lå bare i nettleseren).
 //
 // Oppbygging:
 //   protocol.js  tolking av data fra måleren
@@ -21,7 +26,7 @@ const store = {
 };
 
 const settings = Object.assign(
-  { use: 'vilt', mode: window.innerWidth < 900 ? 'simple' : 'adv', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', pendingSync: false,
+  { use: 'vilt', lang: null, targetVilt: 40, targetDays: 28, restBy: 'days', smiley: false, pendingSync: false,
     fcOn: false, fcLat: null, fcLon: null, fcPlace: null },
   store.get('settings', {}),
 );
@@ -66,17 +71,15 @@ function log(msg) {
 // ---------- innstillinger og modus ----------
 function saveSettings() { store.set('settings', settings); }
 
-function applyMode() {
-  document.body.classList.toggle('simple', settings.mode === 'simple');
-  $('m-simple').setAttribute('aria-pressed', String(settings.mode === 'simple'));
-  $('m-adv').setAttribute('aria-pressed', String(settings.mode !== 'simple'));
-}
-
 function applyUse() {
   document.body.dataset.use = settings.use;
-  // samme farger for vilt og restaurant (fra 2.4)
-  buildGauge();
+  // samme farger for vilt og restaurant (fra 2.4), skalaene følger bruken
+  buildGauges();
 }
+
+// Smilefjes ved mål finnes fra firmware 0.6.3. Ukjent firmware (ikke tilkoblet): tillatt.
+const SMILEY_FW = '0.6.3';
+function smileySupported() { return !state.fw || P.fwNum(state.fw) >= P.fwNum(SMILEY_FW); }
 
 // ---------- innstillinger: dialog og lagring i måleren (fra firmware 0.5.5) ----------
 const LIMITS = { 'target-vilt': P.SET_LIMITS.dg, 'target-days': P.SET_LIMITS.days };
@@ -86,8 +89,8 @@ function renderSync() {
   const el = $('set-sync');
   const name = state.device ? state.device.name : '';
   el.classList.toggle('bad', state.setState === 'failed');
+  // «Lagret i måleren» vises ikke (2026-11-22), bare det brukeren må vite
   el.textContent = {
-    synced: t('settings.synced', { name }),
     saving: t('settings.saving'),
     pending: t('settings.pending'),
     old: t('settings.old'),
@@ -100,12 +103,20 @@ function openSettings() {
   for (const r of dlg.querySelectorAll('input[name=use]')) r.checked = r.value === settings.use;
   for (const r of dlg.querySelectorAll('input[name=lang]')) r.checked = r.value === settings.lang;
   for (const r of dlg.querySelectorAll('input[name=restby]')) r.checked = r.value === settings.restBy;
+  $('smiley-on').checked = !!settings.smiley;
   $('target-vilt').value = settings.targetVilt;
   $('target-days').value = settings.targetDays;
-  applyTargetFields();
-  renderSync();
+  refreshSettingsTexts();
   renderFcSettings();
   dlg.showModal();
+}
+
+// Tekster i dialogen som avhenger av språk og firmware
+function refreshSettingsTexts() {
+  $('smiley-on').disabled = !smileySupported();
+  $('smiley-help').textContent = smileySupported() ? t('settings.smileyHelp') : t('settings.smileyOld', { v: SMILEY_FW });
+  applyTargetFields();
+  renderSync();
 }
 
 // Hvilket mål som vises: døgngrader for vilt og for restaurant med døgngrader, ellers dager.
@@ -146,17 +157,21 @@ async function writeMeterSettings() {
   state.setState = 'saving';
   renderSync();
   try {
-    const want = { use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy };
-    await state.chars.set.writeValueWithResponse(P.buildSettings(want));
-    const got = P.parseSettings(await state.chars.set.readValue());
+    const want = { use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy,
+      smiley: smileySupported() && !!settings.smiley };
+    const got = await gattQ(async () => {
+      await state.chars.set.writeValueWithResponse(P.buildSettings(want));
+      return P.parseSettings(await state.chars.set.readValue());
+    });
     if (got.use !== want.use || got.targetDg !== want.targetDg || got.targetDays !== want.targetDays) {
       throw new Error('måleren svarte med andre verdier');
     }
     if (got.restBy !== want.restBy) throw new Error('måleren kan ikke telle døgngrader i restaurant, oppdater til 0.5.6');
+    if (got.smiley !== want.smiley) throw new Error(`smilefjes krever firmware ${SMILEY_FW}`);
     settings.pendingSync = false;
     saveSettings();
     state.setState = 'synced';
-    log(`Innstillinger lagret i måleren: ${want.use}, ${want.targetDg} dg, ${want.targetDays} dager`);
+    log(`Innstillinger lagret i måleren: ${want.use}, ${want.targetDg} dg, ${want.targetDays} dager, smilefjes ${want.smiley ? 'på' : 'av'}`);
   } catch (e) {
     state.setState = 'failed';
     state.setError = e.message;
@@ -171,13 +186,13 @@ async function syncSettingsOnConnect() {
   if (!state.chars.set) { state.setState = 'old'; return; }
   if (settings.pendingSync) return writeMeterSettings();
   try {
-    const m = P.parseSettings(await state.chars.set.readValue());
+    const m = await gattQ(async () => P.parseSettings(await state.chars.set.readValue()));
     const useChanged = m.use !== settings.use;
-    Object.assign(settings, { use: m.use, targetVilt: m.targetDg, targetDays: m.targetDays, restBy: m.restBy });
+    Object.assign(settings, { use: m.use, targetVilt: m.targetDg, targetDays: m.targetDays, restBy: m.restBy, smiley: m.smiley });
     saveSettings();
     if (useChanged) applyUse();
     state.setState = 'synced';
-    log(`Innstillinger fra måleren: ${m.use}, ${m.targetDg} dg, ${m.targetDays} dager`);
+    log(`Innstillinger fra måleren: ${m.use}, ${m.targetDg} dg, ${m.targetDays} dager, smilefjes ${m.smiley ? 'på' : 'av'}`);
   } catch (e) {
     state.setState = 'failed';
     state.setError = e.message;
@@ -210,6 +225,8 @@ function toggleConnPop(show) {
   if (show) {
     $('pop-name').textContent = state.device ? state.device.name : '';
     $('pop-read').textContent = state.statusAt ? t('conn.lastRead', { time: fmtTime(state.statusAt) }) : '';
+    const s = state.status, lvl = s ? L.batteryLevel(s.vbatMv) : null, pct = s ? L.batteryPercent(s.vbatMv) : null;
+    $('pop-bat').textContent = lvl ? t('conn.battery', { lvl: t('bat.' + lvl), pct: pct !== null ? `${pct} %` : '' }) : '';
     $('dev-name').value = devInfo().name || '';
   }
   pop.hidden = !show;
@@ -218,25 +235,39 @@ function toggleConnPop(show) {
 function devInfo() { return state.devId ? store.get('dev.' + state.devId, {}) : {}; }
 function setDevInfo(patch) { if (state.devId) store.set('dev.' + state.devId, Object.assign(devInfo(), patch)); }
 
-// ---------- instrument: fuktighet ----------
-// Børstet aluminium for begge. Vilt: rødt fra 90 % (kondens). Restaurant: grønt bånd for målområdet.
-let gauge = null;
-function buildGauge() {
-  const el = $('gauge');
-  if (!window.AnalogMeter) { el.innerHTML = ''; gauge = null; return; }
+// ---------- instrumenter: temperatur, fuktighet, duggpunkt ----------
+// Børstet aluminium. Opplyst når måleren er tilkoblet, mørke ellers (gamle verdier).
+// Vilt: rødt fra 15 °C (insekter) og fra 90 % (kondens). Restaurant: grønne bånd for målområdet.
+const G_TEMP = [-10, 30], G_DEW = [-10, 20];
+const frac = ([lo, hi], v) => (v - lo) / (hi - lo);
+let gauges = null;
+function buildGauges() {
+  if (!window.AnalogMeter) { gauges = null; return; }
   const rest = settings.use === 'restaurant';
-  const ticks = [0, 20, 40, 60, 80, 100].map((v) => [String(v), v / 100]);
-  const zones = rest ? [[L.RESTAURANT_RH[0] / 100, L.RESTAURANT_RH[1] / 100, '#2f8a4f']] : [[L.VILT_RH_CONDENSE / 100, 1, '#b8261b']];
-  gauge = new window.AnalogMeter(el, {
-    face: 'alu',                       // aluminium for begge (fra 2.4)
-    upper: { label: t('gauge.label'), ticks, minor: 20, zones },
-    riseS: 0.8, fallS: 0.8,
+  const ticks = (r, vals) => vals.map((v) => [String(v), frac(r, v)]);
+  const make = (id, label, tk, zones, minor) => new window.AnalogMeter($(id), {
+    face: 'alu', small: true, upper: { label, ticks: tk, minor, zones }, riseS: 0.8, fallS: 0.8,
   });
-  setGauge();
+  gauges = {
+    temp: make('g-temp', t('gauge.temp'), ticks(G_TEMP, [-10, 0, 10, 20, 30]),
+      rest ? [[frac(G_TEMP, L.RESTAURANT_TEMP[0]), frac(G_TEMP, L.RESTAURANT_TEMP[1]), '#2f8a4f']] : [[frac(G_TEMP, 15), 1, '#b8261b']], 8),
+    rh: make('g-rh', t('gauge.rh'), ticks([0, 100], [0, 50, 100]),
+      rest ? [[L.RESTAURANT_RH[0] / 100, L.RESTAURANT_RH[1] / 100, '#2f8a4f']] : [[L.VILT_RH_CONDENSE / 100, 1, '#b8261b']], 10),
+    dew: make('g-dew', t('gauge.dew'), ticks(G_DEW, [-10, 0, 10, 20]), [], 6),
+  };
+  setGauges();
 }
-function setGauge() {
+function setGauges() {
+  if (!gauges) return;
   const s = state.status;
-  if (gauge) gauge.set(s && s.rh !== null ? s.rh / 100 : 0);
+  const dew = s ? L.dewPoint(s.tempC, s.rh) : null;
+  gauges.temp.set(s && s.tempC !== null ? frac(G_TEMP, s.tempC) : 0);
+  gauges.rh.set(s && s.rh !== null ? s.rh / 100 : 0);
+  gauges.dew.set(dew !== null ? frac(G_DEW, dew) : 0);
+  const live = connected();
+  $('gauges').classList.toggle('on', live);
+  $('gauges').classList.toggle('off', !live);
+  $('gauge-state').textContent = !live && state.statusAt ? t('gauge.old', { time: fmtTime(state.statusAt) }) : '';
 }
 
 // ---------- beregnet tilstand ----------
@@ -271,15 +302,17 @@ function render() {
   $('who-name').textContent = info.name || (state.device ? state.device.name : '');
   $('who-id').textContent = info.name && state.devId ? state.devId : '';
 
-  // målinger
+  // målinger (tallene under instrumentene)
   $('temp').textContent = s && s.tempC !== null ? fmtT(s.tempC) : '–';
   $('rh').textContent = s && s.rh !== null ? fmtRh(s.rh) : '–';
   const lvl = s ? L.batteryLevel(s.vbatMv) : null;
-  $('bat').textContent = lvl ? t('bat.' + lvl) : '–';
-  const pct = s ? L.batteryPercent(s.vbatMv) : null;
-  $('bat-pct').textContent = pct !== null ? `${pct} %` : '';
   const dew = s ? L.dewPoint(s.tempC, s.rh) : null;
   $('dew').textContent = dew !== null ? fmtT(dew) : '–';
+  // Bare det som krever handling vises på forsiden: sensorfeil og batteri
+  const warn = !s ? '' : s.tempC === null ? t('adv.sensor')
+    : lvl === 'replace' ? t('adv.batteryReplace') : lvl === 'low' ? t('adv.batteryLow') : '';
+  $('hero-warn').textContent = warn;
+  $('hero-warn').hidden = !warn;
 
   if (settings.use === 'restaurant') renderRestaurant(s, per); else renderVilt(s, per, avg24);
 
@@ -302,9 +335,11 @@ function render() {
     return o;
   };
   if (!s) {
-    $('advice').parentElement.hidden = true;
+    const li = document.createElement('li');
+    li.className = 'calm';
+    li.textContent = t('adv.noData');
+    ul.appendChild(li);
   } else {
-    $('advice').parentElement.hidden = false;
     if (!adv.length) {
       const li = document.createElement('li');
       li.className = 'calm';
@@ -319,21 +354,19 @@ function render() {
       if (anchor) {
         const link = document.createElement('a');
         link.href = `laerebok/?lang=${settings.lang}#${anchor}`;
-        link.target = '_blank';
-        link.rel = 'noopener';
         link.className = 'more';
+        link.addEventListener('click', (e) => { e.preventDefault(); openReader(link.getAttribute('href')); });
         link.textContent = t('adv.more');
         li.append(' ', link);
       }
       ul.appendChild(li);
     }
   }
-  setGauge();
+  setGauges();
   $('btn-refresh').hidden = !connected();
   // ny periode fra appen krever firmware 0.6.0
   $('btn-newp').hidden = !(connected() && state.chars.cmd && P.fwNum(state.fw) >= P.fwNum('0.6.0'));
   renderChart(per);
-  renderPeriodNote();
   renderForecast(s);
   renderDebug();
   updateOtaButton();
@@ -357,6 +390,9 @@ function renderVilt(s, per, avg24) {
         const basis = avg24 !== null ? t('hero.basisAvg', { t: fmtT(avg24) }) : t('hero.basisNow', { t: fmtT(s.tempC) });
         note += t('hero.eta', { basis, when: fmtWhen(new Date(Date.now() + days * 86400e3)) });
       }
+      // Værvarselet (under tannhjulet) gir et eget anslag når det er slått på
+      const fe = forecastEta(s);
+      if (fe && fe.at !== null) note += ' ' + t('fc.etaShort', { when: fmtWhen(new Date(fe.at)) });
     }
   }
   $('hero-note').textContent = note;
@@ -364,11 +400,6 @@ function renderVilt(s, per, avg24) {
 
 function renderRestaurant(s, per) {
   const target = settings.targetDays;
-  const rhB = $('rh-band'), tB = $('t-band');
-  rhB.textContent = t('read.target', { min: L.RESTAURANT_RH[0], max: `${L.RESTAURANT_RH[1]} %` });
-  tB.textContent = t('read.target', { min: L.RESTAURANT_TEMP[0], max: `${L.RESTAURANT_TEMP[1]} °C` });
-  rhB.classList.toggle('out', !!(s && s.rh !== null && (s.rh < L.RESTAURANT_RH[0] || s.rh > L.RESTAURANT_RH[1])));
-  tB.classList.toggle('out', !!(s && s.tempC !== null && (s.tempC < L.RESTAURANT_TEMP[0] - 1 || s.tempC > L.RESTAURANT_TEMP[1])));
 
   // Hovedtallet følger valget (dager eller døgngrader), det andre står under.
   const day = per.hours !== null ? Math.floor(per.hours / 24) + 1 : null;
@@ -401,28 +432,12 @@ function renderRestaurant(s, per) {
   $('goal-fill').style.width = `${Math.round(fill * 100)}%`;
   $('goal-fill').classList.toggle('done', fill >= 1);
   $('hero-note').textContent = note;
-
-  // vekt og svinn per måler og periode
-  const key = s && state.devId ? `w.${state.devId}.${s.period}` : null;
-  const w = key ? store.get(key, {}) : {};
-  if (document.activeElement !== $('w-start')) $('w-start').value = w.start ?? '';
-  if (document.activeElement !== $('w-now')) $('w-now').value = w.now ?? '';
-  $('w-start').disabled = $('w-now').disabled = !key;
-  const sh = L.shrinkPercent(w.start, w.now);
-  $('shrink').textContent = sh !== null ? t('rest.shrink', { pct: `${fmt(sh)} %` }) : '';
-}
-
-function saveWeights() {
-  const s = state.status;
-  if (!s || !state.devId) return;
-  const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return n > 0 ? n : null; };
-  store.set(`w.${state.devId}.${s.period}`, { start: num($('w-start').value), now: num($('w-now').value) });
-  render();
 }
 
 function renderChart(per) {
   const svg = $('chart');
   const all = state.history;
+  if (!$('graph').open) return;     // tegnes når trekanten åpnes
   const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 360), H = 240, Lm = 30, Rm = 30, T = 10, B = 26;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   if (!all.length) { svg.innerHTML = ''; return; }
@@ -590,31 +605,46 @@ async function connect() {
 
 function alertBox(msg) { log(msg); }
 
-// ---------- diagnose (OTA-vindu m.m.), lest jevnlig mens tilkoblet ----------
-// Diagnosen kan bare leses (ingen varsling), så appen spør måleren hvert
-// DIAG_POLL_MS. Låsen hindrer to samtidige lesinger av samme karakteristikk.
+// ---------- jevnlig kontakt mens tilkoblet ----------
+// Hvert DIAG_POLL_MS leses diagnosen (OTA-vindu m.m., kan bare leses), og fra
+// firmware 0.6.3 sendes «hold forbindelsen» (måleren kobler fra etter 10 min
+// uten aktivitet). Når siden er skjult, stopper dette, og måleren kobler fra.
+// gattQ: én GATT-operasjon om gangen fra appen (Chrome avviser samtidige).
 const DIAG_POLL_MS = 15000;
-let diagLock = Promise.resolve();
+let gattLock = Promise.resolve();
 let diagTimer = null;
+
+function gattQ(fn) {
+  const p = gattLock.then(fn);
+  gattLock = p.catch(() => {});
+  return p;
+}
 
 function readDiag() {
   if (!state.chars.diag || !connected()) return Promise.resolve(state.diag);
-  const p = diagLock.then(async () => {
+  return gattQ(async () => {
     state.diag = P.parseDiag(await state.chars.diag.readValue());
     state.diagAt = new Date();
     return state.diag;
   });
-  diagLock = p.catch(() => {});
-  return p;
 }
+
+function writeCmd(code) {
+  return gattQ(() => state.chars.cmd.writeValueWithResponse(new Uint8Array([code])));
+}
+
+function keepaliveSupported() { return !!state.chars.cmd && P.fwNum(state.fw) >= P.fwNum('0.6.3'); }
 
 function startDiagPoll() {
   stopDiagPoll();
-  if (!state.chars.diag) return;
+  if (!state.chars.diag && !keepaliveSupported()) return;
   diagTimer = setInterval(async () => {
     if (!connected()) { stopDiagPoll(); return; }
     if (state.otaRunning || state.histBusy || document.hidden) return;
-    try { await readDiag(); } catch (e) { log(`Diagnose: ${e.message}`); return; }
+    try {
+      await readDiag();
+      if (keepaliveSupported()) await writeCmd(P.CMD_KEEPALIVE);
+    } catch (e) { log(`Kontakt: ${e.message}`); return; }
     renderDebug();
     updateOtaButton();
   }, DIAG_POLL_MS);
@@ -635,6 +665,7 @@ function onDisconnected() {
   stopDiagPoll();
   state.diag = null; state.diagAt = null;
   renderDebug();
+  render();             // instrumentene slukkes (verdiene er nå gamle), knapper som krever tilkobling skjules
   // ny periode krever tilkobling: skjul knappen og lukk spørsmålet
   $('btn-newp').hidden = true;
   if ($('confirm-newp').open) $('confirm-newp').close('cancel');
@@ -651,16 +682,18 @@ function onStatus(dv) {
   render();
 }
 
+function histMsg(text) { $('hist-note').textContent = text; $('hist-status').textContent = text; }
+
 async function fetchHistory() {
   if (state.demo) return demoHistory();
   if (state.histBusy || !connected()) return;
   state.histBusy = true;
   $('btn-hist').disabled = true;
   try {
-    const info = P.parseHistInfo(await state.chars.histInfo.readValue());
+    const info = await gattQ(async () => P.parseHistInfo(await state.chars.histInfo.readValue()));
     const readAt = Date.now();
     const count = info.next - info.oldest;
-    if (count <= 0) { state.histInfo = info; $('hist-note').textContent = t('hist.empty'); return; }
+    if (count <= 0) { state.histInfo = info; histMsg(t('hist.empty')); return; }
     const got = [];
     await new Promise((resolve, reject) => {
       const ch = state.chars.histData;
@@ -669,12 +702,12 @@ async function fetchHistory() {
         const p = P.parseHistPacket(ev.target.value);
         if (p.done) { cleanup(); resolve(); return; }
         got.push(...p.records);
-        $('hist-note').textContent = t('hist.fetching', { n: got.length, total: count });
+        histMsg(t('hist.fetching', { n: got.length, total: count }));
       };
       const cleanup = () => { clearTimeout(timer); ch.removeEventListener('characteristicvaluechanged', onData); };
       ch.addEventListener('characteristicvaluechanged', onData);
       ch.startNotifications()
-        .then(() => state.chars.histCtl.writeValueWithResponse(P.buildHistRequest(info.oldest, count)))
+        .then(() => gattQ(() => state.chars.histCtl.writeValueWithResponse(P.buildHistRequest(info.oldest, count))))
         .catch((e) => { cleanup(); reject(e); });
     });
     state.histInfo = info;
@@ -683,9 +716,10 @@ async function fetchHistory() {
     log(`Historikk: ${got.length} poster`);
     $('btn-csv').disabled = !got.length;
     render();
+    $('hist-status').textContent = t('hist.got', { n: got.length });
   } catch (e) {
     log(`Historikk feilet: ${e.message}`);
-    $('hist-note').textContent = t('hist.failed', { msg: e.message });
+    histMsg(t('hist.failed', { msg: e.message }));
   } finally {
     state.histBusy = false;
     $('btn-hist').disabled = !connected() && !state.demo;
@@ -750,14 +784,6 @@ function renderMeters() {
   }
 }
 
-// ---------- notat per periode ----------
-function noteKey() { return state.status && state.devId ? `note.${state.devId}.${state.status.period}` : null; }
-function renderPeriodNote() {
-  const el = $('per-note'), key = noteKey();
-  el.disabled = !key;
-  if (document.activeElement !== el) el.value = key ? store.get(key, '') : '';
-}
-
 // ---------- værvarsel (MET Locationforecast, bare vilt) ----------
 const FC_URL = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
 
@@ -791,6 +817,16 @@ async function loadForecast() {
     state.fcBusy = false;
     render();
   }
+}
+
+// Anslag med værvarsel for hovedtallet, null hvis varselet ikke er i bruk eller ikke hentet
+function forecastEta(s) {
+  const fc = state.fc;
+  if (!s || !settings.fcOn || settings.use !== 'vilt' || settings.fcLat === null || !fc || !fc.series) return null;
+  const now = Date.now();
+  const outNow = L.forecastAt(fc.series, now);
+  const offset = s.tempC !== null && outNow !== null ? s.tempC - outNow : 0;
+  return { ...L.etaWithForecast(s.dg, settings.targetVilt, fc.series, offset, now), offset };
 }
 
 function renderForecast(s) {
@@ -900,7 +936,7 @@ function askNewPeriod() {
 async function doNewPeriod() {
   if (!connected() || !state.chars.cmd) { newpMsg(t('newp.notConnected'), true); log(t('newp.notConnected')); render(); return; }
   try {
-    await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_NEW_PERIOD]));
+    await writeCmd(P.CMD_NEW_PERIOD);
     await new Promise((r) => setTimeout(r, 800));   // måleren måler og lagrer først
     if (!state.demo) onStatus(await state.chars.status.readValue());
     log(t('newp.done'));
@@ -922,7 +958,9 @@ async function loadBuildInfo() {
     if (!res.ok) throw new Error();
     const b = await res.json();
     const d = new Date(b.built);
-    const when = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(d);
+    // kort: yymmdd tt:mm (lokal tid, 24 timer)
+    const p2 = (n) => String(n).padStart(2, '0');
+    const when = `${p2(d.getFullYear() % 100)}${p2(d.getMonth() + 1)}${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
     el.textContent = t('foot.build', { commit: b.commit, when, year: d.getFullYear() });
   } catch (e) {
     el.textContent = t('foot.copy', { year });
@@ -1058,12 +1096,13 @@ async function runOta(source) {
 function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.6.1';
+  state.fw = '0.6.3';
   state.serial = 'A4C1389DDE40';
   refreshLicense();
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
   state.chars.cmd = { async writeValueWithResponse(b) {
     if (b[0] === P.CMD_OTA_OPEN) state.diag.otaMinutesLeft = 3;
+    if (b[0] === P.CMD_KEEPALIVE) return;
     if (b[0] === P.CMD_NEW_PERIOD) {   // demo: ny periode
       const v = new DataView(new Uint8Array(21).buffer);
       const o = state.status;
@@ -1075,7 +1114,7 @@ function demoConnect() {
   } };
   state.model = 'LYWSD03MMC B1.1';
   // innstillinger i «måleren», samme bytes som firmwaren
-  let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy });
+  let demoSet = P.buildSettings({ use: settings.use, targetDg: settings.targetVilt, targetDays: settings.targetDays, restBy: settings.restBy, smiley: !!settings.smiley });
   state.chars.set = {
     async writeValueWithResponse(b) { demoSet = new Uint8Array(b); },
     async readValue() { return new DataView(demoSet.buffer.slice(0)); },
@@ -1106,8 +1145,18 @@ function demoHistory(draw = true) {
 }
 
 // ---------- oppstart ----------
+// ---------- lærebok og bruksanvisning inne i appen ----------
+// Siden forlates ikke, så Bluetooth-forbindelsen og verdiene står når den lukkes.
+function openReader(href) {
+  const sep = href.includes('?') ? '&' : '?';
+  const [path, hash] = href.split('#');
+  const url = path.includes('lang=') ? path : `${path}${sep}lang=${settings.lang}`;
+  $('reader-frame').src = hash ? `${url}#${hash}` : url;
+  $('reader').showModal();
+}
+function closeReader() { if ($('reader').open) $('reader').close(); }
+
 function init() {
-  applyMode();
   applyUse();
   if (!state.demo && !('bluetooth' in navigator)) $('nosupport').hidden = false;
 
@@ -1120,8 +1169,6 @@ function init() {
   $('dev-name').addEventListener('input', (e) => { setDevInfo({ name: e.target.value.trim() }); render(); });
   document.addEventListener('click', (e) => { if (!$('conn-pop').hidden && !$('conn-pop').contains(e.target)) toggleConnPop(false); });
 
-  $('m-simple').addEventListener('click', () => { settings.mode = 'simple'; saveSettings(); applyMode(); render(); });
-  $('m-adv').addEventListener('click', () => { settings.mode = 'adv'; saveSettings(); applyMode(); render(); });
   $('btn-settings').addEventListener('click', openSettings);
   $('btn-refresh').addEventListener('click', refreshAll);
   $('btn-newp').addEventListener('click', askNewPeriod);
@@ -1132,14 +1179,13 @@ function init() {
     b.addEventListener('click', () => setTarget(b.dataset.step, Number($(b.dataset.step).value) + Number(b.dataset.d)));
   }
   for (const id of ['target-vilt', 'target-days']) $(id).addEventListener('change', (e) => setTarget(id, Number(e.target.value)));
-  for (const r of document.querySelectorAll('#settings input[name=lang]')) r.addEventListener('change', (e) => { settings.lang = e.target.value; saveSettings(); buildGauge(); render(); loadBuildInfo(); });
-
-  $('w-start').addEventListener('change', saveWeights);
-  let noteT = 0;
-  $('per-note').addEventListener('input', (e) => {
-    clearTimeout(noteT);
-    noteT = setTimeout(() => { const k = noteKey(); if (k) store.set(k, e.target.value); }, 400);
-  });
+  for (const r of document.querySelectorAll('#settings input[name=lang]')) r.addEventListener('change', (e) => { settings.lang = e.target.value; saveSettings(); buildGauges(); render(); loadBuildInfo(); refreshSettingsTexts(); });
+  $('smiley-on').addEventListener('change', (e) => { settings.smiley = e.target.checked; settingChanged(); });
+  $('graph').addEventListener('toggle', () => renderChart(period()));
+  for (const a of document.querySelectorAll('a[data-reader]')) a.addEventListener('click', (e) => { e.preventDefault(); openReader(a.getAttribute('href')); });
+  $('btn-reader-close').addEventListener('click', closeReader);
+  // «← Appen» inne i læreboka og bruksanvisningen lukker vinduet
+  addEventListener('message', (e) => { if (e.origin === location.origin && e.data === 'dg-close-reader') closeReader(); });
   $('fc-on').addEventListener('change', (e) => {
     settings.fcOn = e.target.checked; saveSettings();
     if (settings.fcOn && settings.fcLat === null) askPosition(); else render();
@@ -1148,13 +1194,12 @@ function init() {
   // Menyen lukkes med krysset eller Esc. Enter i et felt skal ikke lukke den.
   $('settings').querySelector('form').addEventListener('submit', (e) => e.preventDefault());
   $('btn-menu-close').addEventListener('click', () => $('settings').close());
-  $('w-now').addEventListener('change', saveWeights);
   $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);
   $('btn-ota').addEventListener('click', () => runOta('file'));
   $('btn-ota-open').addEventListener('click', async () => {
     try {
-      await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_OTA_OPEN]));
+      await writeCmd(P.CMD_OTA_OPEN);
       await new Promise((r) => setTimeout(r, 400));   // måleren utfører kommandoen i neste runde
       await readDiag();
       log('Oppdateringsvinduet åpnet fra appen');

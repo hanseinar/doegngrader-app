@@ -6,6 +6,8 @@
  *   upper.zones      [[fra, til, farge], ...] i stedet for redFrom, for eksempel
  *                    et grønt bånd midt på skalaen
  *   face: "alu"      skive i børstet aluminium (standard: opplyst gul, "amber")
+ *   small: true      for smale instrumenter (tre i bredden): større tall og
+ *                    etikett, merkelappen nederst over navet, tykkere viser
  *
  *   const m = new AnalogMeter(element, {
  *     upper: {label: "SIGNAL", ticks: [["1", .04], ["3", .155], ...], redFrom: .5, minor: 20},
@@ -30,6 +32,7 @@
     constructor(el, opts) {
       this.el = el;
       this.o = Object.assign({riseS: 0.3, fallS: 0.8, a0: -48, a1: 48}, opts || {});
+      if (this.o.small && !(opts && "a0" in opts)) { this.o.a0 = -42; this.o.a1 = 42; }
       this.value = 0;
       this.target = 0;
       this._raf = 0;
@@ -75,7 +78,8 @@
         const [x0, y0] = pt(r, f0), [x1, y1] = pt(r, f1);
         return `M${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)}`;
       };
-      const alu = o.face === "alu";
+      const alu = o.face === "alu", sm = !!o.small;
+      const fsTick = sm ? 30 : 13, fsLabel = sm ? 21 : 11, lw = sm ? 2.2 : 1;
       const ink = alu ? "#23262a" : "#2a1d08", needleColor = alu ? "#7a1f2b" : "#b8261b";
       let g = "";
       const up = o.upper || {ticks: []};
@@ -86,14 +90,15 @@
       const minor = up.minor || 0;
       for (let i = 0; i <= minor; i++) {
         const f = i / minor, [x0, y0] = pt(148, f), [x1, y1] = pt(153, f);
-        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${zoneAt(f) || ink}" stroke-width="1"/>`;
+        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${zoneAt(f) || ink}" stroke-width="${lw}"/>`;
       }
       for (const [t, f] of up.ticks) {
         const [x0, y0] = pt(148, f), [x1, y1] = pt(159, f), [tx, ty] = pt(170, f), c = zoneAt(f) || ink;
-        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${c}" stroke-width="2"/>`;
-        g += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="${c}">${t}</text>`;
+        g += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${c}" stroke-width="${sm ? 4 : 2}"/>`;
+        const [sx, sy] = sm ? pt(176, f) : [tx, ty];
+        g += `<text x="${sx.toFixed(1)}" y="${(sy + (sm ? 10 : 4)).toFixed(1)}" text-anchor="middle" font-size="${fsTick}" font-weight="700" fill="${c}">${t}</text>`;
       }
-      if (up.label) g += `<text x="${cx}" y="16" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2.5" fill="${ink}">${up.label}</text>`;
+      if (up.label) g += `<text x="${cx}" y="${sm ? H - 40 : 16}" text-anchor="middle" font-size="${fsLabel}" font-weight="700" letter-spacing="${sm ? 2 : 2.5}" fill="${ink}">${up.label}</text>`;
       if (up.unit) g += `<text x="14" y="${H - 8}" font-size="11" font-weight="700" fill="${alu ? "#4a4f55" : "#6b4d12"}">${up.unit}</text>`;
       const lo = o.lower;
       if (lo) {
@@ -105,7 +110,8 @@
         }
         if (lo.label) g += `<text x="${cx}" y="${H - 22}" text-anchor="middle" font-size="9.5" font-weight="700" letter-spacing="2.5" fill="${ink}">${lo.label}</text>`;
       }
-      const needle = `M${cx - 1.6},${cy} L${cx - 0.6},${cy - 158} L${cx + 0.6},${cy - 158} L${cx + 1.6},${cy} Z`;
+      const nw = sm ? 2.6 : 1.6, nt = sm ? 1.2 : 0.6;
+      const needle = `M${cx - nw},${cy} L${cx - nt},${cy - 158} L${cx + nt},${cy - 158} L${cx + nw},${cy} Z`;
       this.el.innerHTML = `
 <div class="am-bezel" style="position:relative;border-radius:12px;padding:7px;
   background:linear-gradient(180deg,#0e1012 0%,#2b2f34 55%,#3a3f45 100%);

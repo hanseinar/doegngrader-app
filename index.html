@@ -12,14 +12,11 @@
 <script src="ameter.js"></script>
 <script type="module" src="app.js"></script>
 </head>
-<body class="simple" data-use="vilt">
+<body data-use="vilt">
 <header class="top">
   <button class="pill conn" id="conn" type="button" aria-haspopup="dialog">
     <span class="lamp" id="conn-lamp"></span><span id="conn-txt" data-t="conn.off">Ikke tilkoblet</span>
   </button>
-  <div class="mode" role="group">
-    <button id="m-simple" type="button" aria-pressed="true" data-t="mode.simple">Enkel</button><button id="m-adv" type="button" aria-pressed="false" data-t="mode.adv">Avansert</button>
-  </div>
   <button class="iconbtn" id="btn-refresh" type="button" hidden data-t-label="conn.refresh" aria-label="Les på nytt">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
   </button>
@@ -31,6 +28,7 @@
 <div class="pop" id="conn-pop" hidden>
   <p class="pop-head"><span class="lamp on"></span><strong id="pop-name">DG-0000</strong></p>
   <p class="muted" id="pop-read"></p>
+  <p class="muted" id="pop-bat"></p>
   <label class="field"><span data-t="conn.nameLabel">Navn på måleren</span>
     <input id="dev-name" type="text" maxlength="40" autocomplete="off" data-t-ph="conn.namePlaceholder"></label>
   <p class="muted small" data-t="conn.autoOff"></p>
@@ -54,58 +52,26 @@
     <p class="sub r-only" id="rest-sub"></p>
     <div class="track" aria-hidden="true"><div class="track-fill" id="goal-fill"></div></div>
 
+    <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
+    <p class="warnline" id="hero-warn" hidden></p>
     <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
     <p class="msg" id="newp-msg" role="status" hidden></p>
-    <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
   </section>
 
-  <section class="meter">
-    <div class="gauge" id="gauge"></div>
+  <!-- Tre instrumenter: opplyst når Bluetooth er tilkoblet, mørke ellers (verdiene er da gamle) -->
+  <section class="gauges off" id="gauges" aria-label="Målinger">
+    <figure class="gcell"><div class="gauge" id="g-temp"></div><figcaption><span class="gv" id="temp">–</span><span class="gl" data-t="read.temp">temperatur</span></figcaption></figure>
+    <figure class="gcell"><div class="gauge" id="g-rh"></div><figcaption><span class="gv" id="rh">–</span><span class="gl" data-t="read.rh">fuktighet</span></figcaption></figure>
+    <figure class="gcell"><div class="gauge" id="g-dew"></div><figcaption><span class="gv" id="dew">–</span><span class="gl" data-t="read.dew">duggpunkt</span></figcaption></figure>
   </section>
+  <p class="gauge-state muted small" id="gauge-state"></p>
 
-  <section class="readings" aria-label="Målinger">
-    <div class="rd rd-rh"><span class="v" id="rh">–</span><span class="l" data-t="read.rh">fuktighet</span><span class="band r-only" id="rh-band"></span><span class="band adv"><span data-t="read.dew">duggpunkt</span> <span id="dew">–</span></span></div>
-    <div class="rd rd-t"><span class="v" id="temp">–</span><span class="l" data-t="read.temp">temperatur</span><span class="band r-only" id="t-band"></span></div>
-    <div class="rd rd-bat"><span class="v" id="bat">–</span><span class="l"><span data-t="read.battery">batteri</span> <span id="bat-pct"></span></span></div>
-  </section>
-
-  <section class="advice" aria-labelledby="adv-h">
-    <h2 id="adv-h" data-t="adv.title">Dette må du passe på</h2>
-    <ul id="advice"></ul>
-  </section>
-
-  <section class="history adv" aria-labelledby="hist-h">
-    <div class="sec-head">
-      <h2 id="hist-h" data-t="hist.title">Temperatur og fuktighet per time</h2>
-      <div class="btns">
-        <button id="btn-hist" type="button" disabled data-t="hist.fetch">Hent historikk</button>
-        <button id="btn-csv" type="button" disabled data-t="hist.csv">Last ned CSV</button>
-      </div>
-    </div>
+  <details class="graph" id="graph">
+    <summary data-t="hist.title">Temperatur og fuktighet per time</summary>
     <p class="legend"><span class="sw sw-t"></span><span data-t="hist.legendTemp">temperatur °C</span> <span class="sw sw-rh"></span><span data-t="hist.legendRh">fuktighet %</span></p>
     <svg class="chart" id="chart" viewBox="0 0 360 240" height="240" role="img"></svg>
     <p class="muted" id="hist-note"></p>
-  </section>
-
-  <section class="forecast adv" id="forecast" hidden aria-labelledby="fc-h">
-    <h2 id="fc-h" data-t="fc.title">Anslag med værvarsel</h2>
-    <p id="fc-text"></p>
-    <ol class="fc-days" id="fc-days"></ol>
-    <p class="muted small" id="fc-note"></p>
-  </section>
-
-  <section class="period adv" aria-labelledby="per-h">
-    <h2 id="per-h" data-t="per.title">Perioden</h2>
-    <label class="field wide-field"><span data-t="per.note">Notat</span>
-      <textarea id="per-note" rows="3" maxlength="2000" data-t-ph="per.notePh"></textarea></label>
-    <div class="wrow r-only">
-      <label class="field"><span data-t="rest.weightStart">Startvekt, kg</span><input id="w-start" type="number" inputmode="decimal" min="0" step="0.01"></label>
-      <label class="field"><span data-t="rest.weightNow">Vekt nå, kg</span><input id="w-now" type="number" inputmode="decimal" min="0" step="0.01"></label>
-      <p class="shrink" id="shrink"></p>
-    </div>
-    <p class="muted small" data-t="per.saved"></p>
-  </section>
-
+  </details>
 </main>
 
 <dialog id="settings" class="menu">
@@ -116,8 +82,29 @@
       <summary data-t="settings.title">Innstillinger</summary>
       <fieldset>
         <legend data-t="settings.use">Bruk</legend>
-        <label class="radio"><input type="radio" name="use" value="vilt"><span data-t="use.vilt">Vilt</span></label>
-        <label class="radio"><input type="radio" name="use" value="restaurant"><span data-t="use.restaurant">Restaurant</span></label>
+        <div class="usecards">
+          <label class="usecard"><input type="radio" name="use" value="vilt">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <path d="M60 3v7M32 15q28-9 56 0" class="hook"/>
+              <path d="M36 14l8 22M84 14l-8 22"/>
+              <path d="M44 36q16 9 32 0"/>
+              <path d="M44 36c-9 9-10 22-4 31 4 6 3 17 6 27 3 9 8 16 14 21 6-5 11-12 14-21 3-10 2-21 6-27 6-9 5-22-4-31"/>
+              <path d="M49 60q11 5 22 0M48 70q12 5 24 0M49 80q11 5 22 0" class="fine"/>
+              </svg>
+            <span data-t="use.vilt">Vilt</span></label>
+          <label class="usecard"><input type="radio" name="use" value="restaurant">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <rect x="26" y="6" width="68" height="108" rx="5"/>
+              <rect x="33" y="22" width="54" height="84" rx="2" class="fine"/>
+              <path d="M33 54h54M33 82h54" class="fine"/>
+              <rect x="40" y="11" width="20" height="6" rx="1" class="fine"/>
+              <circle cx="80" cy="14" r="2.2" class="dot"/>
+              <path d="M44 30v4M62 30v4M44 34c-4 2-5 8-3 13 3 4 8 4 10 0 2-5 0-11-4-13zM62 34c-4 2-5 8-3 13 3 4 8 4 10 0 2-5 0-11-4-13z"/>
+              <path d="M40 62c0-2 3-3 6-3h12c3 0 5 1 5 3v8c0 2-2 3-5 3H46c-3 0-6-1-6-3zM66 62c0-2 2-3 5-3h7c3 0 4 1 4 3v8c0 2-1 3-4 3h-7c-3 0-5-1-5-3z"/>
+              <path d="M30 114v4M90 114v4"/>
+            </svg>
+            <span data-t="use.restaurant">Restaurant</span></label>
+        </div>
       </fieldset>
       <fieldset class="r-only">
         <legend data-t="settings.restBy">Displayet og målet følger</legend>
@@ -134,12 +121,38 @@
         <div class="stepper"><button type="button" data-step="target-days" data-d="-1" data-t-label="settings.less" aria-label="Mindre">−</button><input id="target-days" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit" data-t="unit.days">dager</span><button type="button" data-step="target-days" data-d="1" data-t-label="settings.more" aria-label="Mer">+</button></div>
         <p class="muted small" data-t="settings.targetHelpRest"></p>
       </fieldset>
+      <fieldset>
+        <legend data-t="settings.smiley">Smilefjes på måleren</legend>
+        <label class="radio"><input type="checkbox" id="smiley-on"><span data-t="settings.smileyOn">Vis smilefjes når målet er nådd</span></label>
+        <p class="muted small" id="smiley-help" data-t="settings.smileyHelp"></p>
+      </fieldset>
       <p class="muted small" id="set-sync" role="status"></p>
       <fieldset>
         <legend data-t="settings.lang">Språk</legend>
-        <label class="radio"><input type="radio" name="lang" value="nb"><span>Norsk</span></label>
-        <label class="radio"><input type="radio" name="lang" value="en"><span>English</span></label>
+        <div class="langcards">
+          <label class="langcard"><input type="radio" name="lang" value="nb">
+            <svg viewBox="0 0 22 16" aria-hidden="true"><rect width="22" height="16" fill="#ba0c2f"/><path d="M0 8h22M8 0v16" stroke="#fff" stroke-width="4"/><path d="M0 8h22M8 0v16" stroke="#00205b" stroke-width="2"/></svg>
+            <span>Norsk</span></label>
+          <label class="langcard"><input type="radio" name="lang" value="en">
+            <svg viewBox="0 0 60 30" aria-hidden="true"><clipPath id="uk-c"><path d="M30 15h30v15zv15H0zH0V0zV0h30z"/></clipPath><path d="M0 0v30h60V0z" fill="#012169"/><path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0l60 30m0-30L0 30" clip-path="url(#uk-c)" stroke="#c8102e" stroke-width="4"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#c8102e" stroke-width="6"/></svg>
+            <span>English</span></label>
+        </div>
       </fieldset>
+    </details>
+
+    <details id="tips-sec">
+      <summary data-t="adv.title">Tips og råd</summary>
+      <ul id="advice" class="advice"></ul>
+    </details>
+
+    <details>
+      <summary data-t="hist.menu">Historikk</summary>
+      <p class="muted small" data-t="hist.help"></p>
+      <div class="btns">
+        <button id="btn-hist" type="button" disabled data-t="hist.fetch">Hent historikk</button>
+        <button id="btn-csv" type="button" disabled data-t="hist.csv">Last ned CSV</button>
+      </div>
+      <p class="muted small" id="hist-status"></p>
     </details>
 
     <details>
@@ -148,6 +161,11 @@
       <label class="radio"><input type="checkbox" id="fc-on"><span data-t="fc.enable">Bruk værvarsel for anslag (vilt i garasje eller ute)</span></label>
       <p class="small" id="fc-pos"></p>
       <div class="btns"><button type="button" id="btn-fc-pos" data-t="fc.usePos">Bruk min posisjon</button></div>
+      <div class="forecast" id="forecast" hidden>
+        <p id="fc-text"></p>
+        <ol class="fc-days" id="fc-days"></ol>
+        <p class="muted small" id="fc-note"></p>
+      </div>
     </details>
 
     <details>
@@ -179,7 +197,6 @@
       </details>
       <progress id="ota-progress" max="1" value="0" hidden></progress>
       <p id="ota-status" role="status"></p>
-
     </details>
 
     <details>
@@ -190,13 +207,19 @@
     <details>
       <summary data-t="help.title">Hjelp</summary>
       <ul class="links">
-        <li><a href="manual/" target="_blank" rel="noopener" data-t="help.manual">Bruksanvisning (A4)</a></li>
-        <li><a href="laerebok/" target="_blank" rel="noopener" data-t="help.book">Lærebok: modning av kjøtt</a></li>
+        <li><a href="manual/" data-reader data-t="help.manual">Bruksanvisning (A4)</a></li>
+        <li><a href="laerebok/" data-reader data-t="help.book">Lærebok: modning av kjøtt</a></li>
       </ul>
     </details>
 
     <p class="build small" id="build-menu"></p>
   </form>
+</dialog>
+
+<!-- Lærebok og bruksanvisning åpnes inne i appen, så forbindelsen til måleren beholdes -->
+<dialog id="reader" class="reader">
+  <div class="reader-head"><button type="button" id="btn-reader-close" class="wide" data-t="reader.back">← Tilbake til målingene</button></div>
+  <iframe id="reader-frame" title="Lærebok"></iframe>
 </dialog>
 
 <dialog id="confirm-newp" class="confirm">

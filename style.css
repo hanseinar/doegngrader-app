@@ -1,9 +1,8 @@
-/* Døgngrader, nettside versjon 2.
+/* Døgngrader, nettside versjon 3 (2026-11-22: ingen Enkel/Avansert, tre instrumenter).
  *
  * Ett uttrykk (fra 2.4): kullsvart og hvitt, dyp burgunder og messing,
  * seriff i overskrifter og hovedtall, instrument i børstet aluminium.
  * body[data-use] styrer bare innhold (vilt eller restaurant), ikke farger.
- * Enkel/Avansert: body.simple skjuler .adv.
  * Grønn = i orden (tilkoblet, OTA går), rød = feil. Ingen andre betydninger.
  */
 
@@ -63,7 +62,6 @@ button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 [hidden] { display: none !important; }
-body.simple .adv { display: none !important; }
 body[data-use="vilt"] .r-only, body[data-use="restaurant"] .v-only { display: none !important; }
 .muted { color: var(--muted); }
 .small { font-size: .9rem; }
@@ -88,9 +86,6 @@ body[data-use="vilt"] .r-only, body[data-use="restaurant"] .v-only { display: no
 .lamp { width: 11px; height: 11px; border-radius: 50%; background: var(--bad); flex: none; display: inline-block; }
 .lamp.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
 .lamp.wait { background: var(--warnc); }
-.mode { display: flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; flex: none; }
-.mode button { background: none; border: 0; padding: 0 .9rem; min-height: 40px; color: var(--muted); cursor: pointer; }
-.mode button[aria-pressed="true"] { background: var(--accent); color: #17130d; font-weight: 600; }
 .iconbtn { width: 42px; height: 42px; border-radius: 999px; border: 1px solid var(--edge); background: none; display: grid; place-items: center; cursor: pointer; flex: none; }
 .iconbtn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; }
 
@@ -116,36 +111,35 @@ section { margin-top: 1.4rem; }
 .big span:first-child { font-size: clamp(4.2rem, 21vw, 8rem); font-weight: 700; letter-spacing: -.02em; }
 .big.serif span:first-child { font-family: var(--serif); font-weight: 500; letter-spacing: 0; font-size: clamp(3.6rem, 17vw, 6.5rem); }
 .big .unit { font-size: 1.2rem; color: var(--muted); }
-.meter { margin-top: 1.2rem; }
-.gauge { max-width: 30rem; }
 .track { height: 6px; background: var(--edge); border-radius: 3px; margin-top: 1rem; overflow: hidden; max-width: 30rem; }
 .track-fill { height: 100%; width: 0; background: var(--wine, var(--accent)); transition: width .4s; }
 .track-fill.done { background: var(--ok); }
 .note { margin: .8rem 0 0; font-size: 1.1rem; max-width: 40rem; }
 
-.readings {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 2px solid var(--ink); border-bottom: 1px solid var(--edge);
-}
-.rd { padding: .8rem 0; display: flex; flex-direction: column; min-width: 0; }
-.rd + .rd { padding-left: .9rem; border-left: 1px solid var(--edge); }
-.rd .v { font-size: clamp(1.5rem, 6.5vw, 2.2rem); font-weight: 600; white-space: nowrap; }
-.rd .l { color: var(--muted); font-size: .95rem; }
-.rd .band { font-size: .85rem; color: var(--muted); }
-.rd .band.out { color: var(--bad); font-weight: 600; }
-/* fuktighet foran i restaurant, temperatur foran i vilt */
-body[data-use="vilt"] .rd-t { order: -1; }
-body[data-use="vilt"] .rd-rh { border-left: 1px solid var(--edge); padding-left: .9rem; }
-body[data-use="vilt"] .rd-t { padding-left: 0; border-left: 0; }
-.rd .v { font-family: var(--serif); font-weight: 500; }
+/* ---------- tre instrumenter ----------
+ * .on: opplyst (tilkoblet). .off: slukket og mørkere, verdiene er gamle. */
+.gauges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: 1.4rem; }
+.gcell { margin: 0; min-width: 0; text-align: center; }
+.gauge { transition: filter .6s ease; }
+.gauges.off .gauge { filter: brightness(.38) saturate(.25); }
+.gauges.on .am-bezel { box-shadow: inset 0 2px 3px rgba(0,0,0,.65), 0 0 14px 2px rgba(255, 214, 150, .28) !important; }
+.gauges.on .gauge svg { filter: brightness(1.06); }
+.gcell figcaption { display: flex; flex-direction: column; align-items: center; margin-top: .35rem; line-height: 1.2; }
+.gv { font-family: var(--serif); font-size: clamp(1.15rem, 5vw, 1.6rem); white-space: nowrap; }
+.gl { color: var(--muted); font-size: .85rem; }
+.gauges.off .gv { color: var(--muted); }
+.gauge-state { margin: .4rem 0 0; min-height: 1.2em; text-align: center; }
+.warnline { margin: .6rem 0 0; padding: .5rem .8rem; border-left: 4px solid var(--bad); background: var(--panel); border-radius: 6px; }
 
-.period .wrow { display: flex; gap: .8rem; align-items: flex-end; flex-wrap: wrap; }
+/* ---------- graf bak trekant (som menyen) ---------- */
+.graph { margin-top: 1.2rem; border-top: 1px solid var(--edge); }
+.graph > summary { cursor: pointer; padding: .8rem 0; font-family: var(--hfont); font-weight: 600; list-style-position: inside; }
+.graph[open] > summary { color: var(--accent); }
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .95rem; color: var(--muted); }
 .field input { min-height: var(--touch); padding: 0 .7rem; border: 1px solid var(--edge); border-radius: 8px; background: var(--panel); color: var(--ink); width: 9rem; }
 .pop .field input { width: 100%; }
-.shrink { margin: 0 0 .6rem; font-family: var(--serif); font-size: 1.5rem; }
 
-.advice ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+ul.advice { list-style: none; margin: 0 0 .8rem; padding: 0; display: grid; gap: .5rem; }
 .advice li { padding: .7rem .9rem; border-radius: var(--r); background: var(--panel); border-left: 4px solid var(--edge); }
 .advice li.warn { border-left-color: var(--bad); }
 .advice li.info { border-left-color: var(--warnc); }
@@ -209,7 +203,6 @@ legend { font-weight: 600; margin-bottom: .4rem; }
 @media (max-width: 420px) {
   .top { gap: .4rem; padding-left: .75rem; padding-right: .75rem; }
   .pill { padding: 0 .7rem; }
-  .mode button { padding: 0 .6rem; font-size: .9rem; }
   .pill #conn-txt { font-size: .9rem; }
   .pill { max-width: 46vw; }
 }
@@ -218,8 +211,7 @@ legend { font-weight: 600; margin-bottom: .4rem; }
 .sub { font-family: var(--serif); }
 
 /* ---------- oversikt over målere ---------- */
-body.overview .hero, body.overview .meter, body.overview .readings, body.overview .advice,
-body.overview .history, body.overview .period, body.overview .forecast { display: none; }
+body.overview .hero, body.overview .gauges, body.overview .gauge-state, body.overview .graph { display: none; }
 #meter-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
 .meter-card { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: .15rem .8rem; padding: .9rem 1rem;
   border: 1px solid var(--edge); border-radius: 12px; background: var(--panel); color: var(--ink); cursor: pointer; font: inherit; }
@@ -229,11 +221,26 @@ body.overview .history, body.overview .period, body.overview .forecast { display
 .mc-vals { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
 .mc-when { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
 
-/* ---------- periode ---------- */
-.wide-field { display: block; }
-.wide-field textarea { width: 100%; box-sizing: border-box; margin-top: .25rem; padding: .6rem; border: 1px solid var(--edge); border-radius: 8px;
-  background: var(--panel); color: var(--ink); font: inherit; resize: vertical; }
-.period .wrow { margin-top: .8rem; }
+/* ---------- bruk og språk: to kort side om side ---------- */
+.usecards, .langcards { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.usecard, .langcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: .4rem; padding: .7rem .5rem;
+  border: 2px solid var(--edge); border-radius: 12px; cursor: pointer; text-align: center; font-size: .95rem; }
+.usecard input, .langcard input { position: absolute; opacity: 0; pointer-events: none; }
+.usecard:has(input:checked), .langcard:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.usecard:has(input:focus-visible), .langcard:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+.usecard svg { width: 100%; max-width: 7rem; height: auto; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.usecard svg .fine { stroke-width: 1.4; opacity: .75; }
+.usecard svg .hook { stroke: var(--accent); }
+.usecard svg .dot { fill: var(--ok); stroke: none; }
+.langcard svg { width: 3.4rem; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px var(--edge); }
+
+/* ---------- lærebok og bruksanvisning inne i appen ---------- */
+dialog.reader { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; border: 0; border-radius: 0;
+  display: none; flex-direction: column; background: var(--bg); }
+dialog.reader[open] { display: flex; }
+.reader-head { padding: .5rem 1rem; padding-top: max(.5rem, env(safe-area-inset-top)); border-bottom: 1px solid var(--edge); }
+.reader-head button.wide { margin-top: 0; }
+.reader iframe { flex: 1; width: 100%; border: 0; background: #fff; }
 
 /* ---------- værvarsel ---------- */
 .fc-days { list-style: none; margin: .4rem 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .1rem 1.2rem; font-size: .95rem; }
