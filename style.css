@@ -235,6 +235,7 @@ body.overview .hero, body.overview .gauges, body.overview .gauge-state, body.ove
 .usecard svg .hook { stroke: var(--accent); }
 .usecard svg .dot { fill: var(--ok); stroke: none; }
 .usecard svg .eye { fill: currentColor; stroke: none; }
+.usecard svg.geo { stroke-width: 1.8; }
 .usecard svg .nose { fill: var(--accent); stroke: none; }
 .langcard svg { width: 3.4rem; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px var(--edge); }
 
