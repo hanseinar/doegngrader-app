@@ -1,8 +1,11 @@
-// license.js - abonnementsstatus fra kunderegisteret (admin/), vist under Detaljer.
+// license.js - abonnement per måler fra admin/ (versjon 2, 2026-11-22).
 //
-// Skjult til SERVER og PUBKEY er satt. For test kan localStorage 'dg.licServer'
-// og 'dg.licPubkey' overstyre. Svaret er signert med Ed25519 og lagres per måler,
-// så statusen vises også uten nett til svaret går ut (exp).
+// Appen er betalt. Med lisens (prøveperiode eller abonnement) er alt åpent; uten
+// lisens viser appen bare demo, men firmwareoppdatering er åpen.
+// Av til SERVER og PUBKEY er satt (da er appen åpen som før). For test kan
+// localStorage 'dg.licServer' og 'dg.licPubkey' overstyre.
+// Svaret er signert med Ed25519 og lagres per måler. Uten nett gjelder lagret svar
+// til den første av: prøveperiodens slutt eller abonnementets siste dag, og exp.
 
 export const SERVER = '';     // f.eks. 'https://kunder.info-web.no'
 export const PUBKEY = '';     // fra /api/v1/pubkey (base64url, 32 byte)
@@ -44,17 +47,31 @@ export async function verify(doc, pubkey) {
   } catch (e) { return false; }
 }
 
-// Rader til visning. today: 'YYYY-MM-DD'.
-export function view(doc, today) {
-  if (!doc) return [];
-  const items = Array.isArray(doc.items) && doc.items.length ? doc.items
-    : (doc.features || []).map((f) => ({ f, to: doc.valid_to ?? null, renew: true }));
-  return items.map((i) => ({
-    feature: i.f,
-    to: i.to,
-    state: i.to && i.to < today ? 'expired' : i.renew === false ? 'cancelled' : 'active',
-  }));
+// Dato i norsk tid (YYYY-MM-DD). Abonnementets siste dag (sub_to) er en norsk dato.
+export function osloDate(d = new Date()) {
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Oslo' }).format(d);
 }
+
+// Tilgang ut fra et (kontrollert) svar på tidspunktet now. Regnes i appen, så
+// tilgangen stopper til riktig tid også uten nett.
+// Gir { ok, kind: 'sub'|'trial'|null, until (Date eller 'YYYY-MM-DD'), status }.
+export function access(doc, now = new Date()) {
+  if (!doc || expired(doc, now)) return { ok: false, kind: null, until: null, status: doc ? doc.status : null };
+  if (doc.sub_to && osloDate(now) <= doc.sub_to) return { ok: true, kind: 'sub', until: doc.sub_to, status: doc.status };
+  if (doc.trial_until && now < new Date(doc.trial_until)) return { ok: true, kind: 'trial', until: new Date(doc.trial_until), status: doc.status };
+  return { ok: false, kind: null, until: null, status: doc.status === 'prove' || doc.status === 'aktiv' ? 'utlopt' : doc.status };
+}
+
+export function orderUrl(serial) {
+  const cfg = config();
+  return cfg ? `${cfg.server}/min-side/bestill?serial=${encodeURIComponent(serial || '')}` : null;
+}
+
+// Har måleren hatt tilgang på denne telefonen? Brukes til tilbakestilling ved utløp.
+export function hadAccess(serial) { return ls(`dg.licHad.${serial}`) === '1'; }
+export function markAccess(serial) { lsSet(`dg.licHad.${serial}`, '1'); lsSet(`dg.licReset.${serial}`, ''); }
+export function resetDone(serial) { return ls(`dg.licReset.${serial}`) === '1'; }
+export function markReset(serial) { lsSet(`dg.licReset.${serial}`, '1'); }
 
 export function expired(doc, now = new Date()) {
   return !doc || !doc.exp || new Date(doc.exp) < now;
@@ -62,13 +79,15 @@ export function expired(doc, now = new Date()) {
 
 // Henter svar for måleren; faller tilbake til lagret svar uten nett.
 // Gir { doc, verified, offline } eller null.
-export async function load(serial, fetchFn = fetch) {
+export async function load(serial, fw = '', fetchFn = fetch) {
+  if (typeof fw === 'function') { fetchFn = fw; fw = ''; }
   const cfg = config();
   if (!cfg || !serial) return null;
   const key = `dg.lic.${serial}`;
   let doc = null, offline = false;
   try {
-    const r = await fetchFn(`${cfg.server}/api/v1/lisens/${encodeURIComponent(serial)}`, { cache: 'no-store' });
+    const q = fw ? `?fw=${encodeURIComponent(fw)}` : '';
+    const r = await fetchFn(`${cfg.server}/api/v1/lisens/${encodeURIComponent(serial)}${q}`, { cache: 'no-store' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     doc = await r.json();
   } catch (e) {

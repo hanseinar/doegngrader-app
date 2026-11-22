@@ -50,7 +50,18 @@
     <p class="muted small" data-t="meters.tap"></p>
   </section>
 
-  <section class="hero" aria-live="polite">
+  <!-- Uten abonnement (license.js): bare denne, demo og firmwareoppdatering -->
+  <section class="lock lock-only" id="lock" aria-live="polite">
+    <h2 id="lock-title" data-t="lock.title">Abonnement kreves</h2>
+    <p id="lock-text"></p>
+    <p class="muted" data-t="lock.meterWorks"></p>
+    <div class="btns">
+      <a class="btn primary" id="lock-order" target="_blank" rel="noopener" data-t="lic.order">Bestill abonnement</a>
+      <a class="btn" href="?demo" data-t="lic.demo">Se demo</a>
+    </div>
+  </section>
+
+  <section class="hero lock-hide" aria-live="polite">
     <p class="who" id="who" hidden><span id="who-name"></span> <span class="id" id="who-id"></span></p>
 
     <p class="big serif v-only"><span id="dg-value">–</span><span class="unit" data-t="unit.dg">døgngrader</span></p>
@@ -60,17 +71,18 @@
 
     <p class="note" id="front-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
     <p class="warnline" id="hero-warn" hidden></p>
+    <p class="licline" id="lic-line" hidden></p>
   </section>
 
   <!-- Tre instrumenter: opplyst når Bluetooth er tilkoblet, mørke ellers (verdiene er da gamle) -->
-  <section class="gauges off" id="gauges" aria-label="Målinger">
+  <section class="gauges off lock-hide" id="gauges" aria-label="Målinger">
     <figure class="gcell"><div class="gauge" id="g-temp"></div><figcaption><span class="gv" id="temp">–</span><span class="gl" data-t="read.temp">temperatur</span></figcaption></figure>
     <figure class="gcell"><div class="gauge" id="g-rh"></div><figcaption><span class="gv" id="rh">–</span><span class="gl" data-t="read.rh">fuktighet</span></figcaption></figure>
     <figure class="gcell"><div class="gauge" id="g-dew"></div><figcaption><span class="gv" id="dew">–</span><span class="gl" data-t="read.dew">duggpunkt</span></figcaption></figure>
   </section>
-  <p class="gauge-state muted small" id="gauge-state"></p>
+  <p class="gauge-state muted small lock-hide" id="gauge-state"></p>
 
-  <details class="graph" id="graph">
+  <details class="graph lock-hide" id="graph">
     <summary data-t="hist.title">Temperatur og fuktighet per time</summary>
     <p class="legend"><span class="sw sw-t"></span><span data-t="hist.legendTemp">temperatur °C</span> <span class="sw sw-rh"></span><span data-t="hist.legendRh">fuktighet %</span></p>
     <svg class="chart" id="chart" viewBox="0 0 360 240" height="240" role="img"></svg>
@@ -84,6 +96,7 @@
 
     <details open>
       <summary data-t="settings.title">Innstillinger</summary>
+      <div class="lock-hide">
       <fieldset>
         <legend data-t="settings.use">Modus</legend>
         <div class="usecards">
@@ -125,6 +138,7 @@
         <p class="muted small" id="smiley-help" data-t="settings.smileyHelp"></p>
       </fieldset>
       <p class="muted small" id="set-sync" role="status"></p>
+      </div>
       <fieldset>
         <legend data-t="settings.lang">Språk</legend>
         <div class="langcards">
@@ -138,19 +152,19 @@
       </fieldset>
     </details>
 
-    <details id="per-sec">
+    <details id="per-sec" class="lock-hide">
       <summary data-t="per.title">Perioden</summary>
       <p class="note" id="hero-note"></p>
       <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
       <p class="msg" id="newp-msg" role="status" hidden></p>
     </details>
 
-    <details id="tips-sec">
+    <details id="tips-sec" class="lock-hide">
       <summary data-t="adv.title">Tips og råd</summary>
       <ul id="advice" class="advice"></ul>
     </details>
 
-    <details>
+    <details class="lock-hide">
       <summary data-t="hist.menu">Historikk</summary>
       <p class="muted small" data-t="hist.help"></p>
       <div class="btns">
@@ -160,7 +174,7 @@
       <p class="muted small" id="hist-status"></p>
     </details>
 
-    <details>
+    <details class="lock-hide">
       <summary data-t="fc.settings">Værvarsel</summary>
       <p class="muted small" data-t="fc.help"></p>
       <label class="radio"><input type="checkbox" id="fc-on"><span data-t="fc.enable">Bruk værvarsel for anslag (vilt i garasje eller ute)</span></label>
@@ -182,7 +196,7 @@
       <summary data-t="lic.title">Abonnement</summary>
       <dl id="lic-list"></dl>
       <p class="small muted" id="lic-note"></p>
-      <p class="small links"><a id="lic-minside" target="_blank" rel="noopener" data-t="lic.minside">Min side</a></p>
+      <p class="small links"><a id="lic-order" target="_blank" rel="noopener" data-t="lic.order">Bestill abonnement</a> · <a id="lic-minside" target="_blank" rel="noopener" data-t="lic.minside">Min side</a></p>
     </details>
 
     <details id="ota-sec">
@@ -225,6 +239,18 @@
 <dialog id="reader" class="reader">
   <div class="reader-head"><button type="button" id="btn-reader-close" class="wide" data-t="reader.back">← Tilbake til målingene</button></div>
   <iframe id="reader-frame" title="Lærebok"></iframe>
+</dialog>
+
+<!-- Første tilkobling etter at abonnementet er ute: kunden velger modus uten app -->
+<dialog id="expired-reset" class="confirm">
+  <form method="dialog">
+    <h2 data-t="reset.title">Abonnementet er ikke aktivt</h2>
+    <p id="reset-text"></p>
+    <div class="btns">
+      <button type="submit" value="vilt" data-t="reset.vilt">Vilt (døgngrader)</button>
+      <button type="submit" value="restaurant" data-t="reset.rest">Restaurant (dager)</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="confirm-newp" class="confirm">

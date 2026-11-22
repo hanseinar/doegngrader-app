@@ -44,6 +44,8 @@ const state = {
   setState: 'none',     // innstillinger mot måleren: none, synced, saving, pending, old, failed
   setError: '',
   demo: new URLSearchParams(location.search).has('demo'),
+  // ?demo&demolic: demo med lisenssjekk, for test av abonnement uten Bluetooth
+  demoLic: new URLSearchParams(location.search).has('demolic'),
 };
 
 // ---------- tekst og tall ----------
@@ -147,6 +149,7 @@ function setTarget(id, v) {
 }
 
 async function writeMeterSettings() {
+  if (state.locked) return;                // uten lisens skriver appen ingen innstillinger
   if (!connected()) {
     settings.pendingSync = true;
     saveSettings();
@@ -483,34 +486,108 @@ function renderChart(per) {
   $('hist-note').textContent = t('hist.summary', { hours: per.records.length, dg: fmt(L.dgFromRecords(per.records)) });
 }
 
-// ---------- abonnement (kunderegister, skjult til license.js er satt opp) ----------
-async function refreshLicense() {
+// ---------- abonnement (license.js, versjon 2) ----------
+// Appen er betalt: med prøveperiode eller abonnement er alt åpent. Uten lisens
+// (body.locked) skjules målingene; demo og firmwareoppdatering er åpne.
+// Av til SERVER og PUBKEY er satt i license.js; da er appen åpen som før.
+const LIC_FETCH_MS = 8000;
+function licEnabled() { return !!LIC.config() && (!state.demo || state.demoLic); }
+function licAccess() { return state.lic && state.lic.doc ? LIC.access(state.lic.doc) : null; }
+
+function applyLock() {
+  const acc = licAccess();
+  const wasLocked = !!state.locked;
+  state.locked = licEnabled() && !!state.device && !(acc && acc.ok);
+  document.body.classList.toggle('locked', state.locked);
+  if (state.serial && acc && acc.ok) LIC.markAccess(state.serial);
+  renderLock(acc);
+  if (wasLocked && !state.locked) { render(); if (connected()) fetchHistory(); }
+}
+
+function renderLock(acc) {
+  const dg = state.devId ? `DG\u2011${state.devId}` : t('lock.thisMeter');   // hindrer linjeskift i DG-ID
+  const st = state.lic && state.lic.doc ? state.lic.doc.status : null;
+  let text;
+  if (!state.serial) text = t('lock.noSerial');
+  else if (!state.lic || (!state.lic.doc && state.lic.offline)) text = t('lock.noData', { dg });
+  else if (st === 'bestilt') text = t('lock.pending', { dg });
+  else text = t('lock.need', { dg });
+  $('lock-text').textContent = text;
+  const url = state.serial ? LIC.orderUrl(state.serial) : null;
+  $('lock-order').hidden = !url || st === 'bestilt';
+  if (url) $('lock-order').href = url;
+  // prøveperiode: én linje på forsiden med lenke til bestilling
+  const line = $('lic-line');
+  if (acc && acc.ok && acc.kind === 'trial' && url) {
+    line.innerHTML = '';
+    line.append(t('lic.trialLine', { when: fmtWhen(acc.until) }) + ' ');
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = t('lic.order');
+    line.append(a);
+    line.hidden = false;
+  } else line.hidden = true;
+}
+
+// Etter tilkobling: hent lisens (eller lagret svar uten nett), lås eller åpne.
+async function checkLicense() {
   const cfg = LIC.config(), sec = $('lic-sec');
-  sec.hidden = !cfg;
-  if (!cfg) return;
+  sec.hidden = !licEnabled();
+  if (!licEnabled()) { state.lic = null; applyLock(); return; }
   $('lic-minside').href = cfg.minside;
+  const serial = state.serial;
+  let res = null;
+  if (serial) {
+    const fetchT = (u, o) => withTimeout(fetch(u, o), LIC_FETCH_MS, 'tidsavbrudd');
+    try { res = await LIC.load(serial, state.fw || '', fetchT); } catch (e) { res = null; }
+    if (serial !== state.serial) return;    // byttet måler i mellomtiden
+  }
+  state.lic = res;
+  applyLock();
+  renderLicense();
+}
+
+function renderLicense() {
   const list = $('lic-list'), note = $('lic-note');
+  const url = state.serial ? LIC.orderUrl(state.serial) : null;
+  $('lic-order').hidden = !url;
+  if (url) $('lic-order').href = url;
   list.innerHTML = '';
   if (!state.serial) { note.textContent = t('lic.noSerial'); return; }
-  note.textContent = t('lic.loading');
-  const serial = state.serial;
-  let res;
-  try { res = await LIC.load(serial); } catch (e) { res = null; }
-  if (serial !== state.serial) return;    // byttet måler i mellomtiden
-  if (!res || (!res.doc && res.verified !== false && res.offline)) { note.textContent = t('lic.error'); return; }
+  const res = state.lic;
+  if (!res || (!res.doc && res.offline)) { note.textContent = t('lic.error'); return; }
   if (res.verified === false) { note.textContent = t('lic.bad'); return; }
-  const today = new Date().toISOString().slice(0, 10);
-  const rows = LIC.view(res.doc, today);
+  const d = res.doc, acc = licAccess();
+  const rows = [[t('lic.status'), acc && acc.ok ? t('lic.st.' + (acc.kind === 'sub' ? 'aktiv' : 'prove')) : t('lic.st.' + (d.status === 'bestilt' ? 'bestilt' : 'utlopt'))]];
+  if (acc && acc.kind === 'trial') rows.push([t('lic.until'), fmtWhen(acc.until)]);
+  if (d.sub_to) rows.push([t('lic.subTo'), d.sub_to]);
+  if (acc && acc.kind === 'sub') rows.push([t('lic.renew'), d.renew ? t('lic.yes') : t('lic.no')]);
   const esc = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  list.innerHTML = rows.map((r) => {
-    const name = t('lic.f.' + r.feature) === 'lic.f.' + r.feature ? r.feature : t('lic.f.' + r.feature);
-    const st = r.state === 'expired' ? t('lic.expired', { to: r.to })
-      : r.state === 'cancelled' ? t('lic.cancelled', { to: r.to })
-      : r.to ? t('lic.active', { to: r.to }) : t('lic.activeNoEnd');
-    return `<dt>${esc(name)}</dt><dd class="${r.state === 'active' ? 'ok' : 'warn'}">${esc(st)}</dd>`;
-  }).join('');
-  note.textContent = [rows.length ? '' : t('lic.none'), res.offline ? t('lic.offline') : '', res.verified === null ? t('lic.unverified') : '']
-    .filter(Boolean).join(' ');
+  list.innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+  note.textContent = [res.offline ? t('lic.offline') : '', res.verified === null ? t('lic.unverified') : ''].filter(Boolean).join(' ');
+}
+
+// Første tilkobling etter at tilgangen er ute: kunden velger modus uten app.
+// Fabrikkmål, telling i dager, smilefjes av. Perioden nullstilles ikke.
+async function maybeResetAfterExpiry() {
+  if (!state.locked || !state.serial || !state.chars.set) return;
+  if (!LIC.hadAccess(state.serial) || LIC.resetDone(state.serial)) return;
+  if (state.lic && state.lic.doc && state.lic.doc.status === 'bestilt') return;   // venter på godkjenning
+  $('reset-text').textContent = t('reset.text', { dg: `DG-${state.devId}` });
+  const dlg = $('expired-reset');
+  const use = await new Promise((resolve) => {
+    dlg.addEventListener('close', () => resolve(dlg.returnValue), { once: true });
+    dlg.showModal();
+  });
+  if (use !== 'vilt' && use !== 'restaurant') return;        // lukket: spør igjen neste gang
+  const want = { use, targetDg: 40, targetDays: 28, restBy: 'days', smiley: false };
+  try {
+    await gattQ(() => state.chars.set.writeValueWithResponse(P.buildSettings(want)));
+    LIC.markReset(state.serial);
+    Object.assign(settings, { use, targetVilt: 40, targetDays: 28, restBy: 'days', smiley: false, pendingSync: false });
+    saveSettings();
+    applyUse();
+    log(`Tilbakestilt etter utløp: ${use}, fabrikkmål, smilefjes av`);
+  } catch (e) { log(`Tilbakestilling feilet: ${e.message}`); }
 }
 
 function renderDebug() {
@@ -629,7 +706,7 @@ async function connect(wantId) {
         setDevInfo({ serial: state.serial });
       } catch (e) { state.serial = null; }
     } catch (e) { state.chars.set = null; state.chars.cmd = null; }
-    refreshLicense();                     // venter ikke, nettet kan være tregt
+    await checkLicense();                 // før målingene vises (låst uten lisens)
     state.chars.status.addEventListener('characteristicvaluechanged', (ev) => onStatus(ev.target.value));
     onStatus(await state.chars.status.readValue());
     await state.chars.status.startNotifications();
@@ -638,6 +715,7 @@ async function connect(wantId) {
     $('btn-hist').disabled = false;
     log('Tilkoblet');
     startDiagPoll();
+    if (state.locked) { await maybeResetAfterExpiry(); return; }
     await syncSettingsOnConnect();
     fetchHistory();   // trengs for periode, anslag og graf
   } catch (e) {
@@ -703,6 +781,8 @@ function startDiagPoll() {
       await readDiag();
       if (keepaliveSupported()) await writeCmd(P.CMD_KEEPALIVE);
     } catch (e) { log(`Kontakt: ${e.message}`); return; }
+    // prøveperiode eller abonnement kan gå ut mens appen er åpen
+    if (licEnabled()) { const before = state.locked; applyLock(); if (!before && state.locked) maybeResetAfterExpiry(); }
     renderDebug();
     updateOtaButton();
   }, DIAG_POLL_MS);
@@ -745,6 +825,7 @@ function onStatus(dv) {
 function histMsg(text) { $('hist-note').textContent = text; $('hist-status').textContent = text; }
 
 async function fetchHistory() {
+  if (state.locked) return;
   if (state.demo) return demoHistory();
   if (state.histBusy || !connected()) return;
   state.histBusy = true;
@@ -1189,7 +1270,6 @@ function demoConnect() {
   state.devId = 'DE40';
   state.fw = '0.6.3';
   state.serial = 'A4C1389DDE40';
-  refreshLicense();
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
   state.chars.cmd = { async writeValueWithResponse(b) {
     if (b[0] === P.CMD_OTA_OPEN) state.diag.otaMinutesLeft = 3;
@@ -1219,7 +1299,11 @@ function demoConnect() {
   renderConn('on');
   $('btn-hist').disabled = false;
   onStatus(v);
-  syncSettingsOnConnect().then(render);
+  checkLicense().then(async () => {
+    if (state.locked) { await maybeResetAfterExpiry(); render(); return; }
+    await syncSettingsOnConnect();
+    render();
+  });
 }
 
 function demoHistory(draw = true) {
