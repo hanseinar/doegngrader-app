@@ -554,20 +554,51 @@ function withTimeout(p, ms, what) {
   return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what)), ms))]);
 }
 
-async function connect() {
+// Målere nettleseren allerede har gitt tilgang til (getDevices), uten enhetslista.
+// Ikke alle nettlesere har getDevices; da brukes lista som før. Venter på en
+// reklame (watchAdvertisements) før tilkobling, fordi måleren må være i nærheten.
+const KNOWN_WAIT_MS = 6000;
+let forceChooser = false;
+async function findKnownDevice(wantId) {
+  if (forceChooser || !navigator.bluetooth.getDevices) return null;
+  let list;
+  try { list = await navigator.bluetooth.getDevices(); } catch (e) { return null; }
+  const id = wantId || store.get('lastDevId', null);
+  const dev = list.find((d) => L.deviceId(d.name) === id) || (list.length === 1 && !wantId ? list[0] : null);
+  if (!dev) return null;
+  if (!dev.watchAdvertisements) return dev;
+  const ac = new AbortController();
+  try {
+    const seen = new Promise((resolve) => dev.addEventListener('advertisementreceived', resolve, { once: true }));
+    await dev.watchAdvertisements({ signal: ac.signal });
+    renderConn('wait');
+    await withTimeout(seen, KNOWN_WAIT_MS, t('err.notNear', { name: dev.name }));
+    return dev;
+  } catch (e) {
+    const x = new Error(e.message); x.name = 'NotNear'; throw x;
+  } finally { ac.abort(); }
+}
+
+async function connect(wantId) {
   if (state.demo) return demoConnect();
+  if (typeof wantId !== 'string') wantId = null;
   connMsg('');
   // Måleren fra sist prøves først. Går det ikke, glemmes den, og neste trykk
   // åpner lista der måleren velges (Chrome kan ha gammel informasjon etter OTA).
-  const reused = !!(state.device && !state.device.gatt.connected);
+  const reused = !!(state.device && !state.device.gatt.connected && (!wantId || state.devId === wantId));
+  let known = false;
   try {
-    const device = reused ? state.device : await navigator.bluetooth.requestDevice({
+    let device = reused ? state.device : null;
+    if (!device) { device = await findKnownDevice(wantId); known = !!device; }
+    if (!device) device = await navigator.bluetooth.requestDevice({
       // Windows husker gjerne gammelt navn for samme MAC (0.4: "Doegngrader")
       filters: [{ namePrefix: 'DG-' }, { namePrefix: 'Doegngrader' }, { manufacturerData: [{ companyIdentifier: 0xffff }] }],
       optionalServices: [P.UUID.service, 'device_information', P.OTA_SERVICE, P.SET_SERVICE],
     });
+    forceChooser = false;
     state.device = device;
     state.devId = L.deviceId(device.name);
+    store.set('lastDevId', state.devId);
     device.removeEventListener('gattserverdisconnected', onDisconnected);
     device.addEventListener('gattserverdisconnected', onDisconnected);
     renderConn('wait');
@@ -614,7 +645,11 @@ async function connect() {
     try { if (state.device && state.device.gatt.connected) state.device.gatt.disconnect(); } catch (x) { /* ingen forbindelse */ }
     gattLock = Promise.resolve();
     if (e.name === 'NotFoundError') connMsg('');          // brukeren lukket lista
-    else if (reused) { connMsg(t('err.reconnect', { name: state.device.name, msg: e.message }), true); state.device = null; }
+    else if (reused || known || e.name === 'NotNear') {
+      // neste trykk åpner lista (her er brukerens trykk allerede brukt opp)
+      connMsg(t('err.reconnect', { name: (state.device && state.device.name) || 'måleren', msg: e.message }), true);
+      state.device = null; forceChooser = true;
+    }
     else connMsg(t('err.connect', { msg: e.message }), true);
     renderConn('off');
   }
@@ -805,7 +840,7 @@ function renderMeters() {
     L3.textContent = [`${fmt(Math.floor(m.last.dg * 10) / 10)} dg`, m.last.tempC !== null ? fmtT(m.last.tempC) : null, m.last.rh !== null ? fmtRh(m.last.rh) : null].filter(Boolean).join('  ·  ');
     const L4 = document.createElement('span'); L4.className = 'mc-when'; L4.textContent = t('meters.last', { when: fmtWhen(new Date(m.last.at)) });
     b.append(L1, L2, L3, L4);
-    b.addEventListener('click', connect);
+    b.addEventListener('click', () => connect(m.id));
     li.appendChild(b);
     ul.appendChild(li);
   }
