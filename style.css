@@ -118,17 +118,17 @@ section { margin-top: 1.4rem; }
 
 /* ---------- tre instrumenter ----------
  * .on: opplyst (tilkoblet). .off: slukket og mørkere, verdiene er gamle. */
-.gauges { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: 1.4rem; }
-.gcell { margin: 0; min-width: 0; text-align: center; }
+.gauges { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1.4rem; max-width: 30rem; }
+.gcell { margin: 0; min-width: 0; }
 .gauge { transition: filter .6s ease; }
 .gauges.off .gauge { filter: brightness(.38) saturate(.25); }
 .gauges.on .am-bezel { box-shadow: inset 0 2px 3px rgba(0,0,0,.65), 0 0 14px 2px rgba(255, 214, 150, .28) !important; }
 .gauges.on .gauge svg { filter: brightness(1.06); }
-.gcell figcaption { display: flex; flex-direction: column; align-items: center; margin-top: .35rem; line-height: 1.2; }
-.gv { font-family: var(--serif); font-size: clamp(1.15rem, 5vw, 1.6rem); white-space: nowrap; }
+.gcell figcaption { display: flex; align-items: baseline; justify-content: center; gap: .5rem; margin-top: .3rem; line-height: 1.2; }
+.gv { font-family: var(--serif); font-size: 1.6rem; white-space: nowrap; }
 .gl { color: var(--muted); font-size: .85rem; }
 .gauges.off .gv { color: var(--muted); }
-.gauge-state { margin: .4rem 0 0; min-height: 1.2em; text-align: center; }
+.gauge-state { margin: .4rem 0 0; min-height: 1.2em; max-width: 30rem; text-align: center; }
 .warnline { margin: .6rem 0 0; padding: .5rem .8rem; border-left: 4px solid var(--bad); background: var(--panel); border-radius: 6px; }
 
 /* ---------- graf bak trekant (som menyen) ---------- */

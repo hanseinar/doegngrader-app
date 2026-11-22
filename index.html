@@ -53,10 +53,8 @@
     <p class="sub r-only" id="rest-sub"></p>
     <div class="track" aria-hidden="true"><div class="track-fill" id="goal-fill"></div></div>
 
-    <p class="note" id="hero-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
+    <p class="note" id="front-note" data-t="hero.connectFirst">Koble til måleren for å lese av.</p>
     <p class="warnline" id="hero-warn" hidden></p>
-    <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
-    <p class="msg" id="newp-msg" role="status" hidden></p>
   </section>
 
   <!-- Tre instrumenter: opplyst når Bluetooth er tilkoblet, mørke ellers (verdiene er da gamle) -->
@@ -139,6 +137,13 @@
             <span>English</span></label>
         </div>
       </fieldset>
+    </details>
+
+    <details id="per-sec">
+      <summary data-t="per.title">Perioden</summary>
+      <p class="note" id="hero-note"></p>
+      <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
+      <p class="msg" id="newp-msg" role="status" hidden></p>
     </details>
 
     <details id="tips-sec">

@@ -246,14 +246,14 @@ function buildGauges() {
   const rest = settings.use === 'restaurant';
   const ticks = (r, vals) => vals.map((v) => [String(v), frac(r, v)]);
   const make = (id, label, tk, zones, minor) => new window.AnalogMeter($(id), {
-    face: 'alu', small: true, upper: { label, ticks: tk, minor, zones }, riseS: 0.8, fallS: 0.8,
+    face: 'alu', upper: { label, ticks: tk, minor, zones }, riseS: 0.8, fallS: 0.8,
   });
   gauges = {
     temp: make('g-temp', t('gauge.temp'), ticks(G_TEMP, [-10, 0, 10, 20, 30]),
-      rest ? [[frac(G_TEMP, L.RESTAURANT_TEMP[0]), frac(G_TEMP, L.RESTAURANT_TEMP[1]), '#2f8a4f']] : [[frac(G_TEMP, 15), 1, '#b8261b']], 8),
-    rh: make('g-rh', t('gauge.rh'), ticks([0, 100], [0, 50, 100]),
-      rest ? [[L.RESTAURANT_RH[0] / 100, L.RESTAURANT_RH[1] / 100, '#2f8a4f']] : [[L.VILT_RH_CONDENSE / 100, 1, '#b8261b']], 10),
-    dew: make('g-dew', t('gauge.dew'), ticks(G_DEW, [-10, 0, 10, 20]), [], 6),
+      rest ? [[frac(G_TEMP, L.RESTAURANT_TEMP[0]), frac(G_TEMP, L.RESTAURANT_TEMP[1]), '#2f8a4f']] : [[frac(G_TEMP, 15), 1, '#b8261b']], 40),
+    rh: make('g-rh', t('gauge.rh'), ticks([0, 100], [0, 20, 40, 60, 80, 100]),
+      rest ? [[L.RESTAURANT_RH[0] / 100, L.RESTAURANT_RH[1] / 100, '#2f8a4f']] : [[L.VILT_RH_CONDENSE / 100, 1, '#b8261b']], 20),
+    dew: make('g-dew', t('gauge.dew'), ticks(G_DEW, [-10, -5, 0, 5, 10, 15, 20]), [], 30),
   };
   setGauges();
 }
@@ -316,6 +316,7 @@ function render() {
   $('hero-warn').hidden = !warn;
 
   if (settings.use === 'restaurant') renderRestaurant(s, per); else renderVilt(s, per, avg24);
+  $('front-note').hidden = !!s;
 
   // råd
   const adv = s ? L.advise({
@@ -725,6 +726,8 @@ async function fetchHistory() {
         if (p.done) { cleanup(); resolve(); return; }
         got.push(...p.records);
         histMsg(t('hist.fetching', { n: got.length, total: count }));
+        // Sluttpakken (0 poster) kan gå tapt, varsler kvitteres ikke. Ferdig når alle er mottatt.
+        if (got.length >= count) { cleanup(); resolve(); }
       };
       const cleanup = () => { clearTimeout(timer); ch.removeEventListener('characteristicvaluechanged', onData); };
       ch.addEventListener('characteristicvaluechanged', onData);
