@@ -214,7 +214,7 @@ function renderConn(phase) {
   } else {
     txt.hidden = false;
     txt.textContent = phase === 'wait' ? t('conn.connecting')
-      : state.statusAt ? `${t('conn.lost')}, ${fmtTime(state.statusAt)}` : t('conn.off');
+      : state.statusAt ? t('conn.again', { time: fmtTime(state.statusAt) }) : t('conn.off');
     btn.setAttribute('aria-label', txt.textContent);
   }
 }
@@ -546,10 +546,19 @@ function renderDebug() {
 }
 
 // ---------- Bluetooth ----------
+const CONNECT_TIMEOUT_MS = 15000;
+function withTimeout(p, ms, what) {
+  return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what)), ms))]);
+}
+
 async function connect() {
   if (state.demo) return demoConnect();
+  connMsg('');
+  // Måleren fra sist prøves først. Går det ikke, glemmes den, og neste trykk
+  // åpner lista der måleren velges (Chrome kan ha gammel informasjon etter OTA).
+  const reused = !!(state.device && !state.device.gatt.connected);
   try {
-    const device = state.device && !state.device.gatt.connected ? state.device : await navigator.bluetooth.requestDevice({
+    const device = reused ? state.device : await navigator.bluetooth.requestDevice({
       // Windows husker gjerne gammelt navn for samme MAC (0.4: "Doegngrader")
       filters: [{ namePrefix: 'DG-' }, { namePrefix: 'Doegngrader' }, { manufacturerData: [{ companyIdentifier: 0xffff }] }],
       optionalServices: [P.UUID.service, 'device_information', P.OTA_SERVICE, P.SET_SERVICE],
@@ -560,7 +569,7 @@ async function connect() {
     device.addEventListener('gattserverdisconnected', onDisconnected);
     renderConn('wait');
     log(`Kobler til ${device.name}`);
-    const server = await device.gatt.connect();
+    const server = await withTimeout(device.gatt.connect(), CONNECT_TIMEOUT_MS, t('err.timeout'));
     const svc = await server.getPrimaryService(P.UUID.service);
     for (const k of ['status', 'histInfo', 'histCtl', 'histData']) state.chars[k] = await svc.getCharacteristic(P.UUID[k]);
     try {
@@ -591,6 +600,7 @@ async function connect() {
     onStatus(await state.chars.status.readValue());
     await state.chars.status.startNotifications();
     renderConn('on');
+    connMsg('');
     $('btn-hist').disabled = false;
     log('Tilkoblet');
     startDiagPoll();
@@ -598,12 +608,22 @@ async function connect() {
     fetchHistory();   // trengs for periode, anslag og graf
   } catch (e) {
     log(`Feil: ${e.message}`);
-    if (e.name !== 'NotFoundError') alertBox(t('err.connect', { msg: e.message }));
+    try { if (state.device && state.device.gatt.connected) state.device.gatt.disconnect(); } catch (x) { /* ingen forbindelse */ }
+    gattLock = Promise.resolve();
+    if (e.name === 'NotFoundError') connMsg('');          // brukeren lukket lista
+    else if (reused) { connMsg(t('err.reconnect', { name: state.device.name, msg: e.message }), true); state.device = null; }
+    else connMsg(t('err.connect', { msg: e.message }), true);
     renderConn('off');
   }
 }
 
-function alertBox(msg) { log(msg); }
+// Melding om tilkobling, synlig øverst på forsiden (ikke bare i loggen)
+function connMsg(text, failed) {
+  const el = $('conn-msg');
+  el.textContent = text || '';
+  el.hidden = !text;
+  el.classList.toggle('failed', !!failed);
+}
 
 // ---------- jevnlig kontakt mens tilkoblet ----------
 // Hvert DIAG_POLL_MS leses diagnosen (OTA-vindu m.m., kan bare leses), og fra
@@ -657,6 +677,7 @@ function stopDiagPoll() {
 
 function onDisconnected() {
   log('Frakoblet');
+  gattLock = Promise.resolve();   // en operasjon som aldri fikk svar skal ikke sperre neste tilkobling
   state.otaDisconnected = true;
   renderConn('off');
   toggleConnPop(false);
