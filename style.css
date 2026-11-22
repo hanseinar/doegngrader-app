@@ -232,11 +232,9 @@ body.overview .hero, body.overview .gauges, body.overview .gauge-state, body.ove
 .usecard:has(input:focus-visible), .langcard:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 .usecard svg { width: 100%; max-width: 7rem; height: auto; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .usecard svg .fine { stroke-width: 1.4; opacity: .75; }
-.usecard svg .hook { stroke: var(--accent); }
-.usecard svg .dot { fill: var(--ok); stroke: none; }
-.usecard svg .eye { fill: currentColor; stroke: none; }
-.usecard svg.geo { stroke-width: 2; }
 .usecard svg .nose { fill: var(--accent); stroke: none; }
+/* hjorten (vektorisert tegning, docs/kilde/figurer/hjort.svg): fylte flater, ikke strek */
+.usecard svg.traced .ink { fill: currentColor; fill-rule: evenodd; stroke: none; }
 .langcard svg { width: 3.4rem; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px var(--edge); }
 
 /* ---------- lærebok og bruksanvisning inne i appen ---------- */
