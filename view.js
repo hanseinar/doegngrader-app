@@ -276,7 +276,8 @@ export function renderChart(per) {
   const oldR = recs.slice(0, split + 1), newR = recs.slice(split);
   if (split) {
     s += `<path class="h old" d="${line(oldR, (r) => r.rh, yh)}"/><path class="t old" d="${line(oldR, (r) => r.tempC, y)}"/>`;
-    s += `<line class="mark" x1="${x(newR[0].time)}" x2="${x(newR[0].time)}" y1="${T}" y2="${H - B}"/>`;
+    // rett etter ny periode kan den nye delen være tom (timen er ikke lagret ennå)
+    if (newR.length) s += `<line class="mark" x1="${x(newR[0].time)}" x2="${x(newR[0].time)}" y1="${T}" y2="${H - B}"/>`;
   }
   s += `<path class="h" d="${line(newR, (r) => r.rh, yh)}"/><path class="t" d="${line(newR, (r) => r.tempC, y)}"/>`;
   svg.innerHTML = s;

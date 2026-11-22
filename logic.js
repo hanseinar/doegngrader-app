@@ -6,9 +6,6 @@ export const HIST_FLAG_NEW_PERIOD = 0x02;
 export const HIST_FLAG_SENSOR_ERR = 0x04;
 
 // ---------- bruk og mål ----------
-export const USES = ['vilt', 'restaurant'];
-export const VILT_TARGETS = [40, 50, 60, 80, 100, 120];   // døgngrader (Hjortesenteret: 40 kalv, 40–50 vanlig, 60–120 gamle dyr)
-export const RESTAURANT_DAYS = [14, 21, 28, 35, 45];      // dager (Beef Research: 14–35 dager vanlig)
 
 // Restaurant (tørrmodning storfe): MLA, Beef Research
 export const RESTAURANT_RH = [75, 85];
@@ -82,23 +79,11 @@ export function avgTemp(records, hours = 24, minHours = 6) {
   return recs.reduce((a, r) => a + r.tempC, 0) / recs.length;
 }
 
-export function avgRh(records, hours = 24, minHours = 6) {
-  const recs = records.slice(-hours).filter((r) => r.rh !== null);
-  if (recs.length < minHours) return null;
-  return recs.reduce((a, r) => a + r.rh, 0) / recs.length;
-}
-
 // Døgn til målet ved jevn temperatur. null hvis det ikke går å anslå.
 export function etaDays(dg, target, tempC) {
   if (dg >= target) return 0;
   if (tempC === null || tempC <= 0.5) return null;
   return (target - dg) / tempC;
-}
-
-// Svinn i prosent av startvekt.
-export function shrinkPercent(startKg, nowKg) {
-  if (!(startKg > 0) || !(nowKg > 0)) return null;
-  return ((startKg - nowKg) / startKg) * 100;
 }
 
 // ---------- råd: «Dette må du passe på» ----------

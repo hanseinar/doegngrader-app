@@ -6,7 +6,7 @@ import { $, connected, devInfo, log, setDevInfo, state, store, t, withTimeout } 
 import { demoConnect } from './demo.js';
 import { fetchHistory } from './history.js';
 import { updateOtaButton } from './ota.js';
-import { syncSettingsOnConnect } from './settingsui.js';
+import { pollSettings, syncSettingsOnConnect } from './settingsui.js';
 import { applyLock, checkLicense, licEnabled, maybeResetAfterExpiry } from './subscription.js';
 import { render, renderConn, renderDebug, toggleConnPop } from './view.js';
 
@@ -54,8 +54,14 @@ export async function connect(wantId) {
       optionalServices: [P.UUID.service, 'device_information', P.OTA_SERVICE, P.SET_SERVICE],
     });
     forceChooser = false;
+    const newId = L.deviceId(device.name);
+    if (newId !== state.devId) {
+      // annen måler: ingenting fra forrige måler skal brukes (graf, anslag, lisens)
+      Object.assign(state, { status: null, statusAt: null, statusHex: '', history: [], histInfo: null, histReadAt: null,
+        serial: null, fw: null, model: null, diag: null, lic: null });
+    }
     state.device = device;
-    state.devId = L.deviceId(device.name);
+    state.devId = newId;
     store.set('lastDevId', state.devId);
     device.removeEventListener('gattserverdisconnected', onDisconnected);
     device.addEventListener('gattserverdisconnected', onDisconnected);
@@ -128,6 +134,7 @@ export function connMsg(text, failed) {
 // uten aktivitet). Når siden er skjult, stopper dette, og måleren kobler fra.
 // gattQ: én GATT-operasjon om gangen fra appen (Chrome avviser samtidige).
 export const DIAG_POLL_MS = 15000;
+const SETTINGS_POLL_TICKS = 4;      // innstillinger leses hvert minutt (modus kan byttes med binders)
 export let gattLock = Promise.resolve();
 export let diagTimer = null;
 
@@ -155,12 +162,14 @@ export function keepaliveSupported() { return !!state.chars.cmd && P.fwNum(state
 export function startDiagPoll() {
   stopDiagPoll();
   if (!state.chars.diag && !keepaliveSupported()) return;
+  let tick = 0;
   diagTimer = setInterval(async () => {
     if (!connected()) { stopDiagPoll(); return; }
     if (state.otaRunning || state.histBusy || document.hidden) return;
     try {
       await readDiag();
       if (keepaliveSupported()) await writeCmd(P.CMD_KEEPALIVE);
+      if (++tick % SETTINGS_POLL_TICKS === 0 && !state.locked) await pollSettings();
     } catch (e) { log(`Kontakt: ${e.message}`); return; }
     // prøveperiode eller abonnement kan gå ut mens appen er åpen
     if (licEnabled()) { const before = state.locked; applyLock(); if (!before && state.locked) maybeResetAfterExpiry(); }
@@ -198,8 +207,11 @@ export function onStatus(dv) {
   state.statusHex = P.hex(dv);
   state.statusAt = new Date();
   const st = state.status;
-  setDevInfo({ last: { dg: st.dg, tempC: st.tempC, rh: st.rh, mv: st.vbatMv, at: Date.now() } });
-  log(`Status ${state.statusHex}`);
+  // uten lisens lagres eller logges ingen målinger (de vises heller ikke)
+  if (!state.locked) {
+    setDevInfo({ last: { dg: st.dg, tempC: st.tempC, rh: st.rh, mv: st.vbatMv, at: Date.now() } });
+    log(`Status ${state.statusHex}`);
+  }
   render();
 }
 
@@ -225,7 +237,7 @@ export async function doNewPeriod() {
   try {
     await writeCmd(P.CMD_NEW_PERIOD);
     await new Promise((r) => setTimeout(r, 800));   // måleren måler og lagrer først
-    if (!state.demo) onStatus(await state.chars.status.readValue());
+    if (!state.demo) onStatus(await gattQ(() => state.chars.status.readValue()));
     log(t('newp.done'));
     newpMsg(t('newp.done'), false);
     state.history = []; state.histInfo = null;

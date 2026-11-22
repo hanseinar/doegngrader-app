@@ -33,7 +33,8 @@ export function renderSync() {
   }[state.setState] || '';
 }
 
-export function openSettings() {
+// Fyll feltene i dialogen fra innstillingene (ved åpning og når måleren er endret)
+function fillSettingsFields() {
   const dlg = $('settings');
   for (const r of dlg.querySelectorAll('input[name=use]')) r.checked = r.value === settings.use;
   for (const r of dlg.querySelectorAll('input[name=lang]')) r.checked = r.value === settings.lang;
@@ -42,8 +43,30 @@ export function openSettings() {
   $('target-vilt').value = settings.targetVilt;
   $('target-days').value = settings.targetDays;
   refreshSettingsTexts();
+}
+
+export function openSettings() {
+  fillSettingsFields();
   renderFcSettings();
-  dlg.showModal();
+  $('settings').showModal();
+}
+
+// Leses jevnlig mens tilkoblet: modus kan være byttet med binderset (0.6.4).
+// Ikke mens en endring fra appen venter på å bli skrevet.
+export async function pollSettings() {
+  if (!state.chars.set || settings.pendingSync || syncTimer || state.setState === 'saving') return;
+  const m = await gattQ(async () => P.parseSettings(await state.chars.set.readValue()));
+  if (syncTimer || state.setState === 'saving') return;          // brukeren endret noe i mellomtiden
+  const smiley = smileySupported() ? m.smiley : settings.smiley;
+  if (m.use === settings.use && m.targetDg === settings.targetVilt && m.targetDays === settings.targetDays
+      && m.restBy === settings.restBy && smiley === settings.smiley) return;
+  const useChanged = m.use !== settings.use;
+  Object.assign(settings, { use: m.use, targetVilt: m.targetDg, targetDays: m.targetDays, restBy: m.restBy, smiley });
+  saveSettings();
+  if (useChanged) applyUse();
+  if ($('settings').open) fillSettingsFields();
+  log(`Innstillinger endret på måleren: ${m.use}, ${m.targetDg} dg, ${m.targetDays} dager`);
+  render();
 }
 
 // Tekster i dialogen som avhenger av språk og firmware
@@ -69,7 +92,7 @@ export function settingChanged() {
   saveSettings();
   render();
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(writeMeterSettings, 700);
+  syncTimer = setTimeout(() => { syncTimer = 0; writeMeterSettings(); }, 700);
 }
 
 export function setTarget(id, v) {

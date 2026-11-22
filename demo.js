@@ -12,7 +12,7 @@ import { render, renderConn } from './view.js';
 export function demoConnect() {
   state.device = { name: 'DG-DE40', gatt: { connected: true, disconnect() { this.connected = false; onDisconnected(); } } };
   state.devId = 'DE40';
-  state.fw = '0.6.3';
+  state.fw = '0.6.5';
   state.serial = 'A4C1389DDE40';
   state.diag = { capFlash: null, capUsed: false, runningFrom: 0x40000, otaMinutesLeft: 0, otaBusy: false };
   state.chars.cmd = { async writeValueWithResponse(b) {
@@ -21,7 +21,7 @@ export function demoConnect() {
     if (b[0] === P.CMD_NEW_PERIOD) {   // demo: ny periode
       const v = new DataView(new Uint8Array(21).buffer);
       const o = state.status;
-      v.setUint8(0, 1); v.setUint8(1, 0x60); v.setUint16(2, 0, true); v.setInt16(4, Math.round(o.tempC * 100), true);
+      v.setUint8(0, 1); v.setUint8(1, 0x65); v.setUint16(2, 0, true); v.setInt16(4, Math.round(o.tempC * 100), true);
       v.setUint8(6, o.rh); v.setUint16(7, o.vbatMv, true); v.setUint8(9, 0); v.setUint32(10, 0, true);
       v.setUint16(14, o.period + 1, true);
       onStatus(v);
@@ -37,7 +37,7 @@ export function demoConnect() {
   demoHistory(false);
   const b = new Uint8Array(21), v = new DataView(b.buffer);
   const sum = Math.round(L.dgFromRecords(L.currentPeriod(state.history, state.histInfo.psHour).records) * 28800);
-  v.setUint8(0, 1); v.setUint8(1, 0x60); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
+  v.setUint8(0, 1); v.setUint8(1, 0x65); v.setUint16(2, Math.floor(sum / 2880), true); v.setInt16(4, 612, true);
   v.setUint8(6, 82); v.setUint16(7, 2931, true); v.setUint8(9, 61); v.setUint32(10, sum, true);
   v.setUint16(14, 14, true); v.setUint16(16, 7843, true); v.setUint16(18, 47012, true);
   renderConn('on');

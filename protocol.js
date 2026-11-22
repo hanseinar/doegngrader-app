@@ -1,4 +1,4 @@
-// protocol.js - tolking av data fra døgngrader-måleren (firmware 0.5.0)
+// protocol.js - tolking av data fra døgngrader-måleren (firmware 0.5.0 til 0.6.5)
 // Formatene er beskrevet i docs/spesifikasjon-v1.md og firmware/src/{advdata,gatt,hist}.h.
 // Ingen avhengigheter til nettleser, testes med node (app/tests).
 
@@ -18,8 +18,9 @@ export const HIST_REC_SIZE = 4;
 const STATUS_FLAGS = [
   [0x01, 'Sensorfeil'],
   [0x02, 'Lavt batteri'],
-  [0x04, 'Padden holdt over 10 s'],
+  [0x04, 'Padden holdt over 30 s'],
   [0x08, 'For lav spenning til lagring'],
+  [0x10, 'Oppdateringsvinduet åpent'],
 ];
 
 export const HIST_FLAGS = [
@@ -174,13 +175,6 @@ export function parseHistPacket(buf) {
 // Posten for time `next - 1` ble lagret `secsSinceLast` sekunder før `readAtMs`.
 export function hourToTimeMs(hour, info, readAtMs) {
   return readAtMs - info.secsSinceLast * 1000 - (info.next - 1 - hour) * 3600 * 1000;
-}
-
-// Døgngrader fra historikken: hver time bidrar med max(0, T) / 24.
-export function dgFromHistory(records) {
-  let dg = 0;
-  for (const r of records) if (r.tempC !== null && r.tempC > 0) dg += r.tempC / 24;
-  return dg;
 }
 
 export function hex(buf) {

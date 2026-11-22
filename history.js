@@ -19,7 +19,7 @@ export async function fetchHistory() {
     const info = await gattQ(async () => P.parseHistInfo(await state.chars.histInfo.readValue()));
     const readAt = Date.now();
     const count = info.next - info.oldest;
-    if (count <= 0) { state.histInfo = info; histMsg(t('hist.empty')); return; }
+    if (count <= 0) { state.histInfo = info; state.history = []; histMsg(t('hist.empty')); render(); return; }
     const got = [];
     await new Promise((resolve, reject) => {
       const ch = state.chars.histData;
@@ -34,7 +34,7 @@ export async function fetchHistory() {
       };
       const cleanup = () => { clearTimeout(timer); ch.removeEventListener('characteristicvaluechanged', onData); };
       ch.addEventListener('characteristicvaluechanged', onData);
-      ch.startNotifications()
+      gattQ(() => ch.startNotifications())
         .then(() => gattQ(() => state.chars.histCtl.writeValueWithResponse(P.buildHistRequest(info.oldest, count))))
         .catch((e) => { cleanup(); reject(e); });
     });
@@ -69,7 +69,7 @@ export async function refreshAll() {
   if (state.demo) { demoHistory(); return; }
   if (!connected()) return;
   try {
-    onStatus(await state.chars.status.readValue());
+    onStatus(await gattQ(() => state.chars.status.readValue()));
     await readDiag();
     if (state.chars.set && !settings.pendingSync) await syncSettingsOnConnect();
   } catch (e) { log(`Les på nytt: ${e.message}`); }

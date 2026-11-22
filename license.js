@@ -99,6 +99,9 @@ export async function load(serial, fw = '', fetchFn = fetch) {
   if (!doc) return { doc: null, verified: null, offline };
   const verified = await verify(doc, cfg.pubkey);
   if (verified === false) return { doc: null, verified, offline };
+  // Lagret svar uten nett brukes bare når signaturen er kontrollert. Uten Ed25519
+  // i nettleseren (eldre Chrome/Edge) kreves derfor nett ved hver tilkobling.
+  if (offline && verified !== true) return { doc: null, verified, offline };
   if (!offline) lsSet(key, JSON.stringify(doc));
   return { doc, verified, offline };
 }

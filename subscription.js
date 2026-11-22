@@ -3,7 +3,7 @@
 import * as P from './protocol.js';
 import * as LIC from './license.js';
 import { gattQ } from './ble.js';
-import { $, connected, fmtWhen, log, saveSettings, settings, state, t, withTimeout } from './core.js';
+import { $, setDevInfo, connected, fmtWhen, log, saveSettings, settings, state, t, withTimeout } from './core.js';
 import { fetchHistory } from './history.js';
 import { applyUse } from './settingsui.js';
 import { render } from './view.js';
@@ -22,6 +22,7 @@ export function applyLock() {
   state.locked = licEnabled() && !!state.device && !(acc && acc.ok);
   document.body.classList.toggle('locked', state.locked);
   if (state.serial && acc && acc.ok) LIC.markAccess(state.serial);
+  if (state.locked && state.devId) setDevInfo({ last: null });   // ikke i målerlista uten lisens
   renderLock(acc);
   if (wasLocked && !state.locked) { render(); if (connected()) fetchHistory(); }
 }
@@ -92,8 +93,12 @@ export function renderLicense() {
 // Fabrikkmål, telling i dager, smilefjes av. Perioden nullstilles ikke.
 export async function maybeResetAfterExpiry() {
   if (!state.locked || !state.serial || !state.chars.set) return;
-  if (!LIC.hadAccess(state.serial) || LIC.resetDone(state.serial)) return;
-  if (state.lic && state.lic.doc && state.lic.doc.status === 'bestilt') return;   // venter på godkjenning
+  if (LIC.resetDone(state.serial)) return;
+  const st = state.lic && state.lic.doc ? state.lic.doc.status : null;
+  if (st === 'bestilt') return;                              // venter på godkjenning
+  // tilgangen er ute: denne telefonen har hatt tilgang, eller serveren sier utløpt
+  // (gjelder da også en telefon som aldri har hatt tilgang til måleren)
+  if (!LIC.hadAccess(state.serial) && st !== 'utlopt') return;
   $('reset-text').textContent = t('reset.text', { dg: `DG-${state.devId}` });
   const dlg = $('expired-reset');
   const use = await new Promise((resolve) => {
