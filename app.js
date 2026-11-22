@@ -594,6 +594,9 @@ function onDisconnected() {
   renderConn('off');
   toggleConnPop(false);
   $('btn-hist').disabled = true;
+  // ny periode krever tilkobling: skjul knappen og lukk spørsmålet
+  $('btn-newp').hidden = true;
+  if ($('confirm-newp').open) $('confirm-newp').close('cancel');
   updateOtaButton();
 }
 
@@ -837,7 +840,16 @@ function askPosition() {
 }
 
 // ---------- ny periode fra appen (0.6.0) ----------
+function newpMsg(text, failed) {
+  const el = $('newp-msg');
+  el.textContent = text || '';
+  el.hidden = !text;
+  el.classList.toggle('failed', !!failed);
+}
+
 function askNewPeriod() {
+  newpMsg('');
+  if (!connected() || !state.chars.cmd) { newpMsg(t('newp.notConnected'), true); render(); return; }
   const dlg = $('confirm-newp');
   $('newp-text').textContent = t('newp.text', { name: devInfo().name || (state.device ? state.device.name : '') });
   dlg.returnValue = '';
@@ -845,15 +857,18 @@ function askNewPeriod() {
 }
 
 async function doNewPeriod() {
+  if (!connected() || !state.chars.cmd) { newpMsg(t('newp.notConnected'), true); log(t('newp.notConnected')); render(); return; }
   try {
     await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_NEW_PERIOD]));
     await new Promise((r) => setTimeout(r, 800));   // måleren måler og lagrer først
     if (!state.demo) onStatus(await state.chars.status.readValue());
     log(t('newp.done'));
+    newpMsg(t('newp.done'), false);
     state.history = []; state.histInfo = null;
     fetchHistory();
   } catch (e) {
     log(t('newp.failed', { msg: e.message }));
+    newpMsg(t('newp.failed', { msg: e.message }), true);
   }
 }
 
@@ -875,6 +890,27 @@ async function loadBuildInfo() {
 }
 
 // ---------- OTA ----------
+async function sha256hex(bytes) {
+  const d = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return Array.from(d, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Fra publiseringen 2026-11-22 har latest.json «file»: et versjonert filnavn
+// (doegngrader-<versjon>-<sha12>.bin) som aldri endrer innhold. Eldre
+// publiseringer har bare doegngrader.bin.
+async function fetchLatestBin(latest) {
+  const name = latest.file || 'doegngrader.bin';
+  const res = await fetch(`firmware/${name}?v=${latest.sha256.slice(0, 12)}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const fw = new Uint8Array(await res.arrayBuffer());
+  const sha = await sha256hex(fw);
+  if (fw.length !== latest.size || sha !== latest.sha256) {
+    log(`OTA: nedlastet ${fw.length} B, sha ${sha.slice(0, 12)}; forventet ${latest.size} B, sha ${latest.sha256.slice(0, 12)} (${name})`);
+    throw new Error(t('ota.mismatch'));
+  }
+  return fw;
+}
+
 async function loadLatestFirmware() {
   try {
     const res = await fetch('firmware/latest.json', { cache: 'no-store' });
@@ -911,11 +947,12 @@ async function runOta(source) {
   st.classList.remove('failed');
   try {
     if (source === 'latest') {
+      // Hent latest.json på nytt rett før nedlasting. Siden kan ha vært åpen
+      // mens ny firmware ble publisert, og da peker gammel info på feil fil.
+      await loadLatestFirmware();
+      if (!state.latest) throw new Error(t('ota.latestMissing'));
       st.textContent = t('ota.fetching', { v: state.latest.version });
-      const res = await fetch(`firmware/doegngrader.bin?v=${state.latest.sha256.slice(0, 12)}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      fw = new Uint8Array(await res.arrayBuffer());
-      if (fw.length !== state.latest.size) throw new Error('feil størrelse på nedlastet fil');
+      fw = await fetchLatestBin(state.latest);
     } else {
       fw = new Uint8Array(await $('ota-file').files[0].arrayBuffer());
     }
