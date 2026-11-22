@@ -9,7 +9,6 @@ export const HIST_FLAG_SENSOR_ERR = 0x04;
 export const USES = ['vilt', 'restaurant'];
 export const VILT_TARGETS = [40, 50, 60, 80, 100, 120];   // døgngrader (Hjortesenteret: 40 kalv, 40–50 vanlig, 60–120 gamle dyr)
 export const RESTAURANT_DAYS = [14, 21, 28, 35, 45];      // dager (Beef Research: 14–35 dager vanlig)
-export const DEVICE_SMILEY_TARGET = 40;                    // fast i firmwaren (DG_TARGET_TENTHS)
 
 // Restaurant (tørrmodning storfe): MLA, Beef Research
 export const RESTAURANT_RH = [75, 85];
