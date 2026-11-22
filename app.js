@@ -15,6 +15,7 @@ import * as P from './protocol.js';
 import * as L from './logic.js';
 import * as LIC from './license.js';
 import { translate, pickLang } from './i18n.js';
+import { BUILD } from './version.js';
 
 const HIST_TIMEOUT_MS = 60000;
 const $ = (id) => document.getElementById(id);
@@ -679,6 +680,7 @@ function stopDiagPoll() {
 
 function onDisconnected() {
   log('Frakoblet');
+  $('conn-pop').hidden = true;    // vinduet med «Koble fra» gjelder bare tilkoblet måler
   gattLock = Promise.resolve();   // en operasjon som aldri fikk svar skal ikke sperre neste tilkobling
   state.otaDisconnected = true;
   renderConn('off');
@@ -975,22 +977,51 @@ async function doNewPeriod() {
 }
 
 // ---------- byggeinfo ----------
+// Bunnlinja viser versjonen som KJØRER (version.js), ikke den som er publisert.
+// checkAppUpdate sammenligner med build.json på nettsiden og tilbyr oppdatering.
+function fmtBuild(iso) {
+  const d = new Date(iso), p2 = (n) => String(n).padStart(2, '0');
+  // kort: yymmdd tt:mm (lokal tid, 24 timer)
+  return `${p2(d.getFullYear() % 100)}${p2(d.getMonth() + 1)}${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+
+async function fetchPublished() {
+  const res = await fetch('build.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 async function loadBuildInfo() {
   const el = $('build');
   const year = new Date().getFullYear();
-  try {
-    const res = await fetch('build.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error();
-    const b = await res.json();
-    const d = new Date(b.built);
-    // kort: yymmdd tt:mm (lokal tid, 24 timer)
-    const p2 = (n) => String(n).padStart(2, '0');
-    const when = `${p2(d.getFullYear() % 100)}${p2(d.getMonth() + 1)}${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-    el.textContent = t('foot.build', { commit: b.commit, when, year: d.getFullYear() });
-  } catch (e) {
-    el.textContent = t('foot.copy', { year });
-  }
+  let b = BUILD.commit !== 'dev' ? BUILD : null;
+  if (!b) { try { b = await fetchPublished(); } catch (e) { b = null; } }
+  el.textContent = b && b.built
+    ? t('foot.build', { commit: b.commit, when: fmtBuild(b.built), year: new Date(b.built).getFullYear() })
+    : t('foot.copy', { year });
   $('build-menu').textContent = el.textContent;
+}
+
+const UPDATE_CHECK_MS = 10 * 60 * 1000;
+async function checkAppUpdate() {
+  if (BUILD.commit === 'dev') return;
+  try {
+    const pub = await fetchPublished();
+    const newer = pub.commit && pub.commit !== BUILD.commit;
+    $('update-bar').hidden = !newer;
+    if (newer) $('update-text').textContent = t('upd.text', { commit: pub.commit, when: fmtBuild(pub.built) });
+  } catch (e) { /* uten nett: prøv igjen senere */ }
+}
+
+// Tøm bufferen, be service workeren hente seg selv på nytt, og last siden.
+async function updateApp() {
+  $('btn-update').disabled = true;
+  try {
+    if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if (reg) await reg.update().catch(() => {});
+  } catch (e) { log(`Oppdatering: ${e.message}`); }
+  location.reload();
 }
 
 // ---------- OTA ----------
@@ -1247,6 +1278,10 @@ function init() {
   let rt;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 150); });
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  $('btn-update').addEventListener('click', updateApp);
+  checkAppUpdate();
+  setInterval(checkAppUpdate, UPDATE_CHECK_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkAppUpdate(); });
 
   renderConn('off');
   render();
