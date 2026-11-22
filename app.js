@@ -517,6 +517,7 @@ function renderDebug() {
     rows.push([t('dbg.cal'), d.capFlash === null ? t('dbg.calNone') : `0x${d.capFlash.toString(16)} (${t('dbg.calUsed')})`]);
     rows.push([t('dbg.bank'), `0x${d.runningFrom.toString(16).padStart(5, '0')}`]);
     rows.push([t('dbg.otaWin'), d.otaBusy ? t('dbg.otaBusy') : d.otaMinutesLeft ? t('dbg.otaOpen', { min: d.otaMinutesLeft }) : t('dbg.otaClosed')]);
+    if (state.diagAt) rows.push([t('dbg.diagRead'), state.diagAt.toLocaleTimeString(locale())]);
   }
   if (state.histInfo) {
     const i = state.histInfo;
@@ -555,7 +556,7 @@ async function connect() {
     } catch (e) { log(`Enhetsinfo: ${e.message}`); }
     try {
       state.chars.diag = await svc.getCharacteristic(P.DIAG_UUID);
-      state.diag = P.parseDiag(await state.chars.diag.readValue());
+      await readDiag();
     } catch (e) { state.chars.diag = null; state.diag = null; }
     try {
       const ota = await server.getPrimaryService(P.OTA_SERVICE);
@@ -577,6 +578,7 @@ async function connect() {
     renderConn('on');
     $('btn-hist').disabled = false;
     log('Tilkoblet');
+    startDiagPoll();
     await syncSettingsOnConnect();
     fetchHistory();   // trengs for periode, anslag og graf
   } catch (e) {
@@ -588,12 +590,51 @@ async function connect() {
 
 function alertBox(msg) { log(msg); }
 
+// ---------- diagnose (OTA-vindu m.m.), lest jevnlig mens tilkoblet ----------
+// Diagnosen kan bare leses (ingen varsling), så appen spør måleren hvert
+// DIAG_POLL_MS. Låsen hindrer to samtidige lesinger av samme karakteristikk.
+const DIAG_POLL_MS = 15000;
+let diagLock = Promise.resolve();
+let diagTimer = null;
+
+function readDiag() {
+  if (!state.chars.diag || !connected()) return Promise.resolve(state.diag);
+  const p = diagLock.then(async () => {
+    state.diag = P.parseDiag(await state.chars.diag.readValue());
+    state.diagAt = new Date();
+    return state.diag;
+  });
+  diagLock = p.catch(() => {});
+  return p;
+}
+
+function startDiagPoll() {
+  stopDiagPoll();
+  if (!state.chars.diag) return;
+  diagTimer = setInterval(async () => {
+    if (!connected()) { stopDiagPoll(); return; }
+    if (state.otaRunning || state.histBusy || document.hidden) return;
+    try { await readDiag(); } catch (e) { log(`Diagnose: ${e.message}`); return; }
+    renderDebug();
+    updateOtaButton();
+  }, DIAG_POLL_MS);
+}
+
+function stopDiagPoll() {
+  if (diagTimer) clearInterval(diagTimer);
+  diagTimer = null;
+}
+
 function onDisconnected() {
   log('Frakoblet');
   state.otaDisconnected = true;
   renderConn('off');
   toggleConnPop(false);
   $('btn-hist').disabled = true;
+  // diagnosen gjelder bare mens måleren er tilkoblet
+  stopDiagPoll();
+  state.diag = null; state.diagAt = null;
+  renderDebug();
   // ny periode krever tilkobling: skjul knappen og lukk spørsmålet
   $('btn-newp').hidden = true;
   if ($('confirm-newp').open) $('confirm-newp').close('cancel');
@@ -667,7 +708,7 @@ async function refreshAll() {
   if (!connected()) return;
   try {
     onStatus(await state.chars.status.readValue());
-    if (state.chars.diag) state.diag = P.parseDiag(await state.chars.diag.readValue());
+    await readDiag();
     if (state.chars.set && !settings.pendingSync) await syncSettingsOnConnect();
   } catch (e) { log(`Les på nytt: ${e.message}`); }
   fetchHistory();
@@ -926,7 +967,11 @@ function updateOtaButton() {
   $('btn-ota-latest').disabled = !(ready && state.latest);
   const el = $('ota-latest');
   if (state.latest) {
-    el.textContent = t('ota.latest', { v: state.latest.version, kb: Math.round(state.latest.size / 1024), cur: state.fw || '?' });
+    const L = state.latest;
+    const kb = Math.round(L.size / 1024), cur = state.fw || '?';
+    el.textContent = L.built
+      ? t('ota.latestBuilt', { v: L.version, kb, cur, when: fmtWhen(new Date(L.built)) })
+      : t('ota.latest', { v: L.version, kb, cur });
     $('btn-ota-latest').textContent = state.fw === state.latest.version ? t('ota.reinstall', { v: state.latest.version }) : t('ota.update', { v: state.latest.version });
   } else {
     el.textContent = t('ota.latestMissing');
@@ -960,7 +1005,7 @@ async function runOta(source) {
   } catch (e) { st.textContent = t('ota.badFile', { msg: e.message }); st.classList.add('failed'); return; }
 
   if (state.chars.diag) {
-    state.diag = P.parseDiag(await state.chars.diag.readValue());
+    await readDiag();
     renderDebug();
     if (!state.diag.otaMinutesLeft && !state.diag.otaBusy) { st.textContent = t('ota.windowClosed'); st.classList.add('failed'); return; }
   }
@@ -1111,13 +1156,22 @@ function init() {
     try {
       await state.chars.cmd.writeValueWithResponse(new Uint8Array([P.CMD_OTA_OPEN]));
       await new Promise((r) => setTimeout(r, 400));   // måleren utfører kommandoen i neste runde
-      if (state.chars.diag) state.diag = P.parseDiag(await state.chars.diag.readValue());
+      await readDiag();
       log('Oppdateringsvinduet åpnet fra appen');
     } catch (e) { log(`Åpne vindu feilet: ${e.message}`); }
     updateOtaButton();
     renderDebug();
   });
   $('btn-ota-latest').addEventListener('click', () => runOta('latest'));
+  $('btn-ota-check').addEventListener('click', async () => {
+    const el = $('ota-checked'), before = state.latest ? state.latest.sha256 : null;
+    el.textContent = t('ota.checking');
+    await loadLatestFirmware();
+    const time = new Date().toLocaleTimeString(locale());
+    if (!state.latest) el.textContent = t('ota.checkedNone', { time });
+    else if (before && before !== state.latest.sha256) el.textContent = t('ota.checkedNew', { time, v: state.latest.version });
+    else el.textContent = t('ota.checkedSame', { time, v: state.latest.version });
+  });
   $('ota-file').addEventListener('change', updateOtaButton);
 
   let rt;
