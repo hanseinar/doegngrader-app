@@ -48,16 +48,16 @@
     <h2 id="meters-h" data-t="meters.title">Dine målere</h2>
     <ul id="meter-list"></ul>
     <p class="muted small" data-t="meters.tap"></p>
-    <p class="small"><button type="button" class="linkbtn" id="meters-order" hidden data-t="meters.order">Bestill eller forleng lisens</button></p>
+    <p class="small"><button type="button" class="linkbtn" id="meters-order" hidden data-t="meters.order">Bestill eller forleng abonnement</button></p>
   </section>
 
   <!-- Uten lisens (license.js): bare denne, demo og firmwareoppdatering -->
   <section class="lock lock-only" id="lock" aria-live="polite">
-    <h2 id="lock-title" data-t="lock.title">Lisens kreves</h2>
+    <h2 id="lock-title" data-t="lock.title">Abonnement kreves</h2>
     <p id="lock-text"></p>
     <p class="muted" data-t="lock.meterWorks"></p>
     <div class="btns">
-      <button type="button" class="primary" id="lock-order" data-t="lic.order">Bestill lisens</button>
+      <button type="button" class="primary" id="lock-order" data-t="lic.order">Bestill abonnement</button>
       <a class="btn" href="?demo" data-t="lic.demo">Se demo</a>
     </div>
   </section>
@@ -194,7 +194,7 @@
     </details>
 
     <details id="lic-sec" hidden>
-      <summary data-t="lic.title">Lisens</summary>
+      <summary data-t="lic.title">Abonnement</summary>
       <dl id="lic-list"></dl>
       <p class="small muted" id="lic-note"></p>
       <p class="small"><button type="button" class="linkbtn" id="lic-order" data-t="lic.orderMail">Bestill eller forleng på e-post</button></p>
@@ -245,7 +245,7 @@
 <!-- Første tilkobling etter at lisensen er ute: kunden velger modus uten app -->
 <dialog id="expired-reset" class="confirm">
   <form method="dialog">
-    <h2 data-t="reset.title">Lisensen er ikke aktiv</h2>
+    <h2 data-t="reset.title">Abonnementet er ikke aktivt</h2>
     <p id="reset-text"></p>
     <div class="btns">
       <button type="submit" value="vilt" data-t="reset.vilt">Vilt (døgngrader)</button>
@@ -257,7 +257,7 @@
 <!-- Bestilling: e-postadressen som tekst (ingen e-postlenke), ferdig tekst å kopiere, kontakt -->
 <dialog id="order-dlg" class="confirm order">
   <form method="dialog">
-    <h2 data-t="order.title">Bestill eller forleng lisens</h2>
+    <h2 data-t="order.title">Bestill eller forleng abonnement</h2>
     <p data-t="order.intro">Send en e-post til:</p>
     <p class="order-mail"><span id="order-addr" class="sel"></span> <button type="button" class="linkbtn" id="order-copy-addr" data-t="order.copyAddr">Kopier</button></p>
     <p data-t="order.include">Ta med dette i e-posten:</p>

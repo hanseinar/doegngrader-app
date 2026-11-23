@@ -1,2 +1,2 @@
 // Skrevet ved publisering
-export const BUILD = { commit: '025323c', built: '2026-11-23T20:14:09Z' };
+export const BUILD = { commit: 'ed2bcfc', built: '2026-11-23T20:20:53Z' };
