@@ -158,6 +158,17 @@
       <p class="note" id="hero-note"></p>
       <div class="btns hero-actions"><button type="button" id="btn-newp" hidden data-t="newp.button">Start ny periode</button></div>
       <p class="msg" id="newp-msg" role="status" hidden></p>
+      <div id="per-store" class="per-store" hidden>
+        <label class="field"><span data-t="per.note">Notat for perioden</span>
+          <textarea id="per-note" rows="3" maxlength="4000" data-t-ph="per.notePh"></textarea></label>
+        <div class="per-w">
+          <label class="field"><span data-t="per.win">Vekt inn (kg)</span><input id="per-win" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label class="field"><span data-t="per.wout">Vekt ut (kg)</span><input id="per-wout" type="text" inputmode="decimal" autocomplete="off"></label>
+        </div>
+        <p class="muted small"><span id="per-shrink"></span> <span data-t="per.stored">Lagres på serveren for denne måleren.</span></p>
+        <h3 id="per-old-h" class="per-old-h" hidden data-t="per.old">Tidligere perioder</h3>
+        <ul id="per-old" class="per-old"></ul>
+      </div>
     </details>
 
     <details id="tips-sec" class="lock-hide">

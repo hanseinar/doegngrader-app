@@ -9,6 +9,7 @@ import { updateOtaButton } from './ota.js';
 import { pollSettings, syncSettingsOnConnect } from './settingsui.js';
 import { applyLock, checkLicense, licEnabled, maybeResetAfterExpiry } from './subscription.js';
 import { render, renderConn, renderDebug, toggleConnPop } from './view.js';
+import { pullOverview } from './sync.js';
 
 // ---------- Bluetooth ----------
 export const CONNECT_TIMEOUT_MS = 15000;
@@ -58,7 +59,7 @@ export async function connect(wantId) {
     if (newId !== state.devId) {
       // annen måler: ingenting fra forrige måler skal brukes (graf, anslag, lisens)
       Object.assign(state, { status: null, statusAt: null, statusHex: '', history: [], histInfo: null, histReadAt: null,
-        serial: null, fw: null, model: null, diag: null, lic: null });
+        serial: null, fw: null, model: null, diag: null, lic: null, server: null });
     }
     state.device = device;
     state.devId = newId;
@@ -104,6 +105,7 @@ export async function connect(wantId) {
     startDiagPoll();
     if (state.locked) { await maybeResetAfterExpiry(); return; }
     await syncSettingsOnConnect();
+    pullOverview();   // navn, perioder og notater fra serveren
     fetchHistory();   // trengs for periode, anslag og graf
   } catch (e) {
     log(`Feil: ${e.message}`);

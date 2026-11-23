@@ -8,6 +8,7 @@ import { forecastEta, renderForecast } from './forecast.js';
 import { updateOtaButton } from './ota.js';
 import * as LIC from './license.js';
 import { licEnabled, licStatus, openOrder, orderTextFor } from './order.js';
+import { renderPeriods } from './sync.js';
 
 export function renderConn(phase) {
   const lamp = $('conn-lamp'), txt = $('conn-txt'), btn = $('conn');
@@ -97,6 +98,7 @@ export function render() {
   if (!connected()) renderConn('off');   // pilleteksten styres her, ikke av data-t
   const s = state.status;
   renderMeters();
+  renderPeriods();
   const per = period();
   const avg24 = L.avgTemp(per.records);
 

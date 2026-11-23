@@ -22,8 +22,11 @@ import { downloadCsv, fetchHistory, refreshAll } from './history.js';
 import { checkAppUpdate, loadBuildInfo, loadLatestFirmware, runOta, UPDATE_CHECK_MS, updateApp, updateOtaButton } from './ota.js';
 import { applyTargetFields, applyUse, openSettings, refreshSettingsTexts, setTarget, settingChanged } from './settingsui.js';
 import { buildGauges, closeReader, openReader, period, render, renderChart, renderConn, renderDebug, toggleConnPop } from './view.js';
+import { initSync, pushName, flush } from './sync.js';
 
 function init() {
+  initSync();
+  flush();
   applyUse();
   if (!state.demo && !('bluetooth' in navigator)) $('nosupport').hidden = false;
 
@@ -33,7 +36,7 @@ function init() {
     else connect();
   });
   $('btn-disconnect').addEventListener('click', () => { if (state.device) state.device.gatt.disconnect(); toggleConnPop(false); });
-  $('dev-name').addEventListener('input', (e) => { setDevInfo({ name: e.target.value.trim() }); render(); });
+  $('dev-name').addEventListener('input', (e) => { setDevInfo({ name: e.target.value.trim() }); pushName(e.target.value.trim()); render(); });
   document.addEventListener('click', (e) => { if (!$('conn-pop').hidden && !$('conn-pop').contains(e.target)) toggleConnPop(false); });
 
   $('btn-settings').addEventListener('click', openSettings);

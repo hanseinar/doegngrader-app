@@ -291,6 +291,14 @@ dialog.menu .build { color: var(--muted); margin-top: .8rem; }
 .hero-actions { margin-top: .8rem; }
 dialog.confirm { width: min(26rem, calc(100vw - 2rem)); }
 /* knapp som ser ut som en lenke, i appens messingfarge (bestilling, 2026-11-23) */
+.per-store { margin-top: 1rem; border-top: 1px solid var(--edge); padding-top: .8rem; }
+.per-store textarea, .per-store input { width: 100%; font: inherit; background: var(--bg); color: var(--ink); border: 1px solid var(--edge); border-radius: 8px; padding: .55rem .65rem; min-height: 44px; }
+.per-w { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.per-old-h { font-family: var(--hfont); font-size: 1.05rem; margin: 1.1rem 0 .4rem; }
+.per-old { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.per-old li { border: 1px solid var(--edge); border-radius: 10px; padding: .6rem .75rem; display: grid; gap: .15rem; }
+.per-old li span { color: var(--muted); font-size: .9rem; }
+.per-old li p { margin: .2rem 0 0; font-size: .9rem; white-space: pre-wrap; }
 .linkbtn { background: none; border: 0; padding: .2rem 0; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .licline .linkbtn { font-size: inherit; }
 dialog.order textarea { width: 100%; font: .85rem/1.45 var(--sans); background: var(--bg); color: var(--ink); border: 1px solid var(--edge); border-radius: 8px; padding: .6rem; resize: vertical; }

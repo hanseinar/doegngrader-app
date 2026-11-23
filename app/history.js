@@ -6,6 +6,7 @@ import { $, connected, HIST_TIMEOUT_MS, log, settings, state, t } from './core.j
 import { demoHistory } from './demo.js';
 import { syncSettingsOnConnect } from './settingsui.js';
 import { render } from './view.js';
+import { pushAfterHistory } from './sync.js';
 
 export function histMsg(text) { $('hist-note').textContent = text; $('hist-status').textContent = text; }
 
@@ -42,6 +43,7 @@ export async function fetchHistory() {
     state.histReadAt = readAt;
     state.history = got.map((r) => ({ ...r, time: P.hourToTimeMs(r.hour, info, readAt) }));
     log(`Historikk: ${got.length} poster`);
+    pushAfterHistory();   // til serveren (sync.js)
     $('btn-csv').disabled = !got.length;
     render();
     $('hist-status').textContent = t('hist.got', { n: got.length });
