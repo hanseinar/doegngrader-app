@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Modna, vit når kjøttet er klart</title>
-<meta name="description" content="Modna er en liten måler som følger kjøttet og teller modningen i døgngrader eller dager. Svaret står på skjermen, uten app og uten konto.">
+<meta name="description" content="Modna er en liten måler som henger ved kjøttet og teller modningen i døgngrader eller dager. Svaret står på skjermen, uten app og uten konto.">
 <meta name="theme-color" content="#121110">
 <link rel="icon" href="app/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,7 +108,14 @@ ul.tick li::before{content:"";position:absolute;left:2px;top:.62em;width:10px;he
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,64px)}
 details{border-bottom:1px solid var(--line);padding:15px 0}summary{cursor:pointer;font-weight:500}details p{margin:.6em 0 0;color:var(--mut)}
 .contact{text-align:center}.contact p{margin-inline:auto}
-.mail{font-family:"Source Serif 4",serif;font-size:clamp(20px,2.8vw,30px);color:var(--brass2);overflow-wrap:anywhere}
+.mailrow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 14px;max-width:none}
+.mail{font-family:"Source Serif 4",serif;font-size:clamp(20px,2.8vw,30px);color:var(--brass2);overflow-wrap:anywhere;user-select:all}
+.copy{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 15px Inter,sans-serif;cursor:pointer}
+.copied{color:var(--mut);font-size:14px;min-width:4em}
+.kontakt{max-width:680px;margin:10px auto 0;border:1px solid var(--line);border-radius:14px;padding:0 20px;text-align:left}
+.kontakt summary{padding:14px 0;color:var(--brass2);font-weight:500}
+.kgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 24px;padding-bottom:6px}.kgrid p{color:var(--ink);margin:0 0 14px}
+@media(max-width:600px){.kgrid{grid-template-columns:minmax(0,1fr)}}
 footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px solid var(--line);text-align:center}
 
 @media(max-width:860px){.ihero,.calc,.mgrid,.feature,.two{grid-template-columns:minmax(0,1fr)}.feature.flip>:first-child{order:0}.meter{max-width:340px}}
@@ -138,13 +145,13 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
  <div>
   <p class="kick">Måler for modning av kjøtt</p>
   <h1>Vit når kjøttet er <em>klart.</em></h1>
-  <p class="lead">Modna henger på kjøttet og teller modningen hele tiden, i døgngrader eller dager. Svaret står rett på skjermen. Ingen app, ingen konto, ingen dekning nødvendig.</p>
+  <p class="lead">Modna henger ved kjøttet og teller modningen hele tiden, i døgngrader eller dager. Svaret står rett på skjermen. Ingen app, ingen konto, ingen dekning nødvendig.</p>
   <div class="cta"><a class="btn" href="#kontakt">Bestill målere</a><a class="btn ghost" href="#dogngrader">Regn på modningen</a></div>
  </div>
  <div class="meter"><div class="glow"></div><img src="img/maaler.png" alt="Modna-måleren med 25,3 døgngrader og 23 grader i displayet" width="900" height="845"></div>
 </div>
 <div class="wrap three">
- <div><b>Følger kjøttet</b><span>Måleren henger på stykket, ikke i skapet. Flyttes kjøttet, flytter målingen med.</span></div>
+ <div><b>Følger kjøttet</b><span>Måleren henger ved stykket, ikke i skapet. Flyttes kjøttet, flytter målingen med.</span></div>
  <div><b>Teller riktig</b><span>Bare temperatur over 0 °C teller. Frossent kjøtt modnes ikke.</span></div>
  <div><b>Virker alltid</b><span>Displayet viser svaret uten mobil. Appen er et tillegg for mer innsikt.</span></div>
 </div></header>
@@ -171,7 +178,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
 <section class="band" id="maleren"><div class="wrap mgrid">
  <div>
   <h2>Svaret står på skjermen</h2>
-  <p class="lead">Heng måleren på kjøttet og les av. Alt du trenger for å vite når kjøttet er klart, vises i displayet.</p>
+  <p class="lead">Heng måleren ved kjøttet og les av. Alt du trenger for å vite når kjøttet er klart, vises i displayet.</p>
   <ol class="leg">
    <li><span class="num">1</span><span><b>Døgngrader</b> så langt i perioden.</span></li>
    <li><span class="num">2</span><span><b>Modus:</b> «–» for vilt, «=» for restaurant.</span></li>
@@ -181,8 +188,8 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
    <li><span class="num">6</span><span><b>Smilefjes</b> når målet er nådd, hvis det er slått på i appen.</span></li>
   </ol>
   <div class="how">
-   <div><b>Ny periode</b>En binders fra Reset til Gnd under bakplaten i ett sekund. Tellingen starter på nytt.</div>
-   <div><b>Bytte mellom vilt og restaurant</b>Hold bindersen i ti sekunder til symbolet blinker.</div>
+   <div><b>Ny periode</b>En binders fra Reset til Gnd under bakplaten i ett sekund, eller fra appen. Tellingen starter på nytt.</div>
+   <div><b>Bytte mellom vilt og restaurant</b>Hold bindersen i ti sekunder til symbolet blinker, eller velg i appen.</div>
   </div>
  </div>
  <div class="meter" style="max-width:460px">
@@ -238,6 +245,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
     <li>Følger skrotten fra felling via henging til partering.</li>
     <li>Anslag med værvarsel når dyret henger ute.</li>
     <li>Virker på hytta og i skogen, uten mobil og dekning.</li>
+    <li>Måleren må henge beskyttet mot regn.</li>
    </ul>
   </div>
   <div class="mode">
@@ -262,17 +270,23 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
  <div>
   <details><summary>Teller den når det er kuldegrader?</summary><p>Nei. Temperatur under 0 °C gir ingen døgngrader, fordi frossent kjøtt ikke modnes. Tellingen fortsetter når det blir varmere.</p></details>
   <details><summary>Må jeg ha med mobilen?</summary><p>Nei. Svaret står i displayet. Appen er for den som vil se graf, fuktighet, anslag og historikk.</p></details>
-  <details><summary>Hvilke telefoner virker appen på?</summary><p>Appen bruker Bluetooth i nettleseren. Det virker i Chrome, Edge og Vivaldi på Android og PC. Safari på iPhone og iPad støtter foreløpig ikke Bluetooth fra nettsider.</p></details>
-  <details><summary>Hva slags batteri bruker den?</summary><p>Et vanlig CR2032 knappcellebatteri, med pluss opp.</p></details>
-  <details><summary>Hvordan skiller jeg målerne fra hverandre?</summary><p>Hver måler har en kode på fire tegn, for eksempel 4AF2. Den vises i appen, og samme kode kan stå på merkelappen på kjøttstykket.</p></details>
+  <details><summary>Hvilke telefoner virker appen på?</summary><p>Appen bruker Bluetooth i nettleseren. Det virker i Chrome, Edge og Vivaldi på Android og PC.</p><p>På iPhone og iPad støtter ingen av de vanlige nettleserne Bluetooth fra nettsider, heller ikke Chrome og Edge, fordi de bruker samme motor som Safari. Egne nettlesere fra App Store, som Bluefy, legger til Bluetooth, men de er ikke testet med Modna ennå.</p></details>
+  <details><summary>Hva slags batteri bruker den?</summary><p>Et vanlig CR2032 knappcellebatteri. Batteriet følger med, og nye får du kjøpt i de aller fleste dagligvarebutikker.</p></details>
+  <details><summary>Hvordan skiller jeg målerne fra hverandre?</summary><p>Hver måler har en kode på fire tegn, for eksempel 4AF2. Koden står bak på måleren når du får den, og den vises i appen. Samme kode kan stå på merkelappen på kjøttstykket.</p></details>
  </div>
 </div></section>
 
 <section class="band contact" id="kontakt"><div class="wrap">
  <h2>Bestill eller spør</h2>
  <p class="lead">Skriv hvor mange målere du trenger, og om de skal brukes til vilt eller restaurant.</p>
- <p><a class="mail" href="mailto:hans.einar.steinsland@gmail.com?subject=Modna">hans.einar.steinsland@gmail.com</a></p>
- <p><a class="btn ghost" href="app/">Åpne appen</a></p>
+ <p class="mailrow"><span class="mail" id="mail">hans.einar.steinsland@gmail.com</span> <button type="button" class="copy" id="copyMail">Kopier</button> <span class="copied" id="copied" role="status"></span></p>
+ <details class="kontakt"><summary>Kontaktinformasjon</summary>
+  <div class="kgrid">
+   <p>Hans Einar Steinsland<br>Prestagarden 75<br>4130 Hjelmeland</p>
+   <p>E-post: hans.einar.steinsland@gmail.com<br>Telefon: +47 938 22 938<br>Org.nr.: 982 820 073</p>
+  </div>
+ </details>
+ <p style="margin-top:28px"><a class="btn ghost" href="app/">Åpne appen</a></p>
 </div></section>
 
 <footer>© 2026 Hans Einar Steinsland · Modna · modna.info-web.no</footer>
@@ -296,6 +310,10 @@ v.querySelector('source').addEventListener('error',fail);v.addEventListener('err
 // pause når filmen er rullet ut av syne
 const io=new IntersectionObserver(es=>{for(const e of es)if(!e.isIntersecting&&!v.paused)v.pause()},{threshold:.15});io.observe(v);
 ui();
+
+// e-postadressen kopieres, ingen e-postlenke
+document.getElementById('copyMail').addEventListener('click',async()=>{const el=document.getElementById('mail'),c=document.getElementById('copied');
+ try{await navigator.clipboard.writeText(el.textContent);c.textContent='Kopiert'}catch{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent='Markert, kopier med Ctrl+C'}});
 
 // kalkulator
 const t=document.getElementById('t'),tv=document.getElementById('tv'),mv=document.getElementById('mv'),res=document.getElementById('res'),rest=document.getElementById('rest'),cs=document.getElementById('cs');

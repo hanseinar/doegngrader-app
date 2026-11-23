@@ -7,7 +7,7 @@ import { $, applyTexts, connected, devInfo, fmt, fmtDay, fmtRh, fmtT, fmtTime, f
 import { forecastEta, renderForecast } from './forecast.js';
 import { updateOtaButton } from './ota.js';
 import * as LIC from './license.js';
-import { licEnabled, licStatus, orderMailFor } from './order.js';
+import { licEnabled, licStatus, openOrder, orderTextFor } from './order.js';
 
 export function renderConn(phase) {
   const lamp = $('conn-lamp'), txt = $('conn-txt'), btn = $('conn');
@@ -364,9 +364,8 @@ export function renderMeters() {
     ul.appendChild(li);
   }
   // Bestill eller forleng for alle målerne telefonen kjenner (én e-post)
-  const mail = licEnabled() ? orderMailFor(list) : null;
-  $('meters-order').hidden = !mail;
-  if (mail) $('meters-order').href = mail;
+  $('meters-order').hidden = !(licEnabled() && orderTextFor(list));
+  $('meters-order').onclick = () => openOrder(list);
 }
 
 // ---------- oppstart ----------

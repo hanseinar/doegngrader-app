@@ -290,6 +290,14 @@ dialog.menu .build { color: var(--muted); margin-top: .8rem; }
 /* ---------- ny periode ---------- */
 .hero-actions { margin-top: .8rem; }
 dialog.confirm { width: min(26rem, calc(100vw - 2rem)); }
+/* knapp som ser ut som en lenke, i appens messingfarge (bestilling, 2026-11-23) */
+.linkbtn { background: none; border: 0; padding: .2rem 0; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.licline .linkbtn { font-size: inherit; }
+dialog.order textarea { width: 100%; font: .85rem/1.45 var(--sans); background: var(--bg); color: var(--ink); border: 1px solid var(--edge); border-radius: 8px; padding: .6rem; resize: vertical; }
+dialog.order .order-mail { font-size: 1.05rem; overflow-wrap: anywhere; }
+dialog.order .sel { user-select: text; -webkit-user-select: text; }
+dialog.order .order-contact { margin: .6rem 0 .4rem; }
+dialog.order .order-contact summary { cursor: pointer; color: var(--accent); font-weight: 600; }
 dialog.confirm h2 { margin-top: 0; }
 button.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
 

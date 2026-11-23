@@ -48,7 +48,7 @@
     <h2 id="meters-h" data-t="meters.title">Dine målere</h2>
     <ul id="meter-list"></ul>
     <p class="muted small" data-t="meters.tap"></p>
-    <p class="small"><a id="meters-order" hidden data-t="meters.order">Bestill eller forleng lisens</a></p>
+    <p class="small"><button type="button" class="linkbtn" id="meters-order" hidden data-t="meters.order">Bestill eller forleng lisens</button></p>
   </section>
 
   <!-- Uten lisens (license.js): bare denne, demo og firmwareoppdatering -->
@@ -57,7 +57,7 @@
     <p id="lock-text"></p>
     <p class="muted" data-t="lock.meterWorks"></p>
     <div class="btns">
-      <a class="btn primary" id="lock-order" data-t="lic.order">Bestill lisens</a>
+      <button type="button" class="primary" id="lock-order" data-t="lic.order">Bestill lisens</button>
       <a class="btn" href="?demo" data-t="lic.demo">Se demo</a>
     </div>
   </section>
@@ -197,7 +197,7 @@
       <summary data-t="lic.title">Lisens</summary>
       <dl id="lic-list"></dl>
       <p class="small muted" id="lic-note"></p>
-      <p class="small links"><a id="lic-order" data-t="lic.orderMail">Bestill eller forleng på e-post</a></p>
+      <p class="small"><button type="button" class="linkbtn" id="lic-order" data-t="lic.orderMail">Bestill eller forleng på e-post</button></p>
     </details>
 
     <details id="ota-sec">
@@ -251,6 +251,24 @@
       <button type="submit" value="vilt" data-t="reset.vilt">Vilt (døgngrader)</button>
       <button type="submit" value="restaurant" data-t="reset.rest">Restaurant (dager)</button>
     </div>
+  </form>
+</dialog>
+
+<!-- Bestilling: e-postadressen som tekst (ingen e-postlenke), ferdig tekst å kopiere, kontakt -->
+<dialog id="order-dlg" class="confirm order">
+  <form method="dialog">
+    <h2 data-t="order.title">Bestill eller forleng lisens</h2>
+    <p data-t="order.intro">Send en e-post til:</p>
+    <p class="order-mail"><span id="order-addr" class="sel"></span> <button type="button" class="linkbtn" id="order-copy-addr" data-t="order.copyAddr">Kopier</button></p>
+    <p data-t="order.include">Ta med dette i e-posten:</p>
+    <textarea id="order-text" rows="8" readonly></textarea>
+    <p class="small"><button type="button" class="linkbtn" id="order-copy-text" data-t="order.copyText">Kopier teksten</button> <span id="order-copied" class="muted" role="status"></span></p>
+    <details class="order-contact">
+      <summary data-t="order.contact">Kontaktinformasjon</summary>
+      <p class="sel">Hans Einar Steinsland<br>Prestagarden 75<br>4130 Hjelmeland</p>
+      <p class="sel"><span data-t="order.mailLabel">E-post</span>: hans.einar.steinsland@gmail.com<br><span data-t="order.phoneLabel">Telefon</span>: +47 938 22 938<br><span data-t="order.orgLabel">Org.nr.</span>: 982 820 073</p>
+    </details>
+    <div class="btns"><button type="submit" value="close" data-t="order.close">Lukk</button></div>
   </form>
 </dialog>
 

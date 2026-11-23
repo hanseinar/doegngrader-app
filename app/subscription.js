@@ -4,7 +4,7 @@ import * as P from './protocol.js';
 import * as LIC from './license.js';
 import { gattQ } from './ble.js';
 import { $, devInfo, setDevInfo, connected, fmtWhen, log, saveSettings, settings, state, t, withTimeout } from './core.js';
-import { licEnabled, orderMailFor } from './order.js';
+import { licEnabled, openOrder, orderTextFor } from './order.js';
 import { fetchHistory } from './history.js';
 import { applyUse } from './settingsui.js';
 import { render } from './view.js';
@@ -28,10 +28,11 @@ export function applyLock() {
   if (wasLocked && !state.locked) { render(); if (connected()) fetchHistory(); }
 }
 
-// E-post for å bestille eller forlenge lisens for måleren som er tilkoblet.
-function currentOrderMail() {
-  return state.serial ? orderMailFor([{ serial: state.serial, id: state.devId, name: devInfo().name }]) : null;
+// Måleren som er tilkoblet, til bestilling eller forlengelse av lisens.
+function currentOrder() {
+  return state.serial ? [{ serial: state.serial, id: state.devId, name: devInfo().name }] : null;
 }
+const canOrder = (m) => !!(m && orderTextFor(m));
 
 export function renderLock(acc) {
   const dg = state.devId ? `DG\u2011${state.devId}` : t('lock.thisMeter');   // hindrer linjeskift i DG-ID
@@ -40,16 +41,17 @@ export function renderLock(acc) {
   else if (!state.lic || (!state.lic.doc && state.lic.offline)) text = t('lock.noData', { dg });
   else text = t('lock.need', { dg });
   $('lock-text').textContent = text;
-  const url = currentOrderMail();
+  const cur = currentOrder(), url = canOrder(cur);
   $('lock-order').hidden = !url;
-  if (url) $('lock-order').href = url;
+  $('lock-order').onclick = () => openOrder(cur);
   // prøveperiode: én linje på forsiden med lenke til bestilling
   const line = $('lic-line');
   if (acc && acc.ok && acc.kind === 'trial' && url) {
     line.innerHTML = '';
     line.append(t('lic.trialLine', { when: fmtWhen(acc.until) }) + ' ');
-    const a = document.createElement('a');
-    a.href = url; a.textContent = t('lic.order');
+    const a = document.createElement('button');
+    a.type = 'button'; a.className = 'linkbtn'; a.textContent = t('lic.order');
+    a.addEventListener('click', () => openOrder(cur));
     line.append(a);
     line.hidden = false;
   } else line.hidden = true;
@@ -74,9 +76,9 @@ export async function checkLicense() {
 
 export function renderLicense() {
   const list = $('lic-list'), note = $('lic-note');
-  const url = currentOrderMail();
-  $('lic-order').hidden = !url;
-  if (url) $('lic-order').href = url;
+  const cur = currentOrder();
+  $('lic-order').hidden = !canOrder(cur);
+  $('lic-order').onclick = () => openOrder(cur);
   list.innerHTML = '';
   if (!state.serial) { note.textContent = t('lic.noSerial'); return; }
   const res = state.lic;
