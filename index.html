@@ -3,335 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Modna, vit når kjøttet er klart</title>
-<meta name="description" content="Modna er en liten måler som henger ved kjøttet og teller modningen i døgngrader eller dager. Svaret står på skjermen, uten app og uten konto.">
+<title>Modna, under bygging</title>
+<meta name="description" content="Modna, måler for modning av kjøtt. Siden er under bygging.">
 <meta name="theme-color" content="#121110">
 <link rel="icon" href="app/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Modna landingsside. Farger og skrift som appen: kull, messing, varmhvit,
-   Source Serif 4 for overskrifter og Inter for brødtekst. Filmen øverst i full bredde,
-   deretter informasjonen i rolige bånd. Stabler under 860px. */
-:root{color-scheme:dark;--bg:#121110;--bg2:#191715;--card:#201d1a;--line:#36312b;--ink:#efe7da;--mut:#b5aa99;--dim:#8c8275;--brass:#c9a46a;--brass2:#e2c48d;--red:#b3392f}
-*{box-sizing:border-box;min-width:0}
-html{scroll-padding-top:70px;scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.62 Inter,system-ui,sans-serif;overflow-x:clip}
-h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;font-weight:600;line-height:1.08;text-wrap:balance;margin:0 0 .45em}
-h2{font-size:clamp(32px,4.2vw,50px)}h3{font-size:clamp(21px,2vw,25px)}
-p{margin:0 0 1em;max-width:62ch}a{color:var(--brass2)}
-.wrap{max-width:1180px;margin:0 auto}
-.band{padding:clamp(48px,7vw,104px) max(5vw,18px)}
-.alt{background:var(--bg2);border-block:1px solid var(--line)}
-.lead{font-size:clamp(17px,1.6vw,19.5px);color:var(--mut)}
-.kick{color:var(--brass);font-weight:500;margin-bottom:.6em}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 24px;border-radius:999px;background:var(--brass);color:#1a1510;font-weight:600;text-decoration:none;border:0;font-size:16px;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--brass2);outline-offset:3px}
-
-/* navigasjon */
-nav{position:sticky;top:0;z-index:20;background:rgba(18,17,16,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;gap:20px;padding:10px max(5vw,18px)}
-.logo{font-family:"Source Serif 4",serif;font-size:21px;letter-spacing:.34em;color:var(--brass2);text-decoration:none;margin-right:auto}
-nav .l{color:var(--mut);text-decoration:none;font-size:15px;padding:10px 0}nav .l:hover{color:var(--ink)}
-nav .btn{min-height:40px;padding:0 18px;font-size:15px}
-
-/* filmen */
-.film{position:relative;background:#000;line-height:0}
-.film video{width:100%;max-height:calc(100vh - 62px);aspect-ratio:16/9;object-fit:contain;display:block;background:#000}
-.vctl{position:absolute;right:max(2vw,12px);bottom:max(2vw,12px);display:flex;gap:10px;line-height:1}
-.vctl button{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(10,9,8,.62);backdrop-filter:blur(6px);color:#fff;font:500 15px Inter,sans-serif;cursor:pointer}
-.vctl button:hover{background:rgba(10,9,8,.85)}
-.vctl svg{width:18px;height:18px;fill:currentColor}
-.vfail{display:none;aspect-ratio:16/9;max-height:70vh;place-items:center;text-align:center;line-height:1.3;background:radial-gradient(70% 80% at 50% 40%,#3a2e20,#121110 75%)}
-.vfail div{font-family:"Source Serif 4",serif;font-size:clamp(40px,8vw,96px);letter-spacing:.3em;color:var(--brass2)}
-.film.nofilm video,.film.nofilm .vctl{display:none}.film.nofilm .vfail{display:grid}
-
-/* intro */
-.ihero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,5vw,72px);align-items:center}
-.intro h1{font-size:clamp(44px,6vw,80px);margin-bottom:.32em}
-.intro h1 em{color:var(--brass2);font-weight:400}
-.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
-.meter{position:relative;max-width:480px;width:100%;justify-self:center}
-.meter img{width:100%;height:auto;display:block;filter:drop-shadow(0 30px 40px rgba(0,0,0,.65))}
-.glow{position:absolute;inset:8% -6% -4%;background:radial-gradient(closest-side,rgba(201,164,106,.22),transparent);z-index:-1}
-.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:clamp(36px,5vw,64px)}
-.three div{background:var(--bg);padding:20px 22px}
-.three b{display:block;font-family:"Source Serif 4",serif;font-size:21px;font-weight:600;margin-bottom:2px}
-.three span{color:var(--mut);font-size:15px}
-
-/* døgngrader */
-.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(24px,5vw,64px);align-items:start}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,2.6vw,30px)}
-.row{margin-bottom:20px}.row label,.row .lab{display:flex;justify-content:space-between;gap:10px;font-weight:500;margin-bottom:6px}
-.row output{font-family:"Source Serif 4",serif;font-size:21px;color:var(--brass2);white-space:nowrap}
-input[type=range]{width:100%;accent-color:var(--brass);height:44px;margin:0}
-.seg{display:flex;gap:8px;flex-wrap:wrap}.seg button{min-height:44px;padding:0 15px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
-.seg button[aria-pressed=true]{border-color:var(--brass);background:#2e271f;color:var(--brass2)}
-.big{font-family:"Source Serif 4",serif;font-size:clamp(56px,7vw,92px);line-height:1;white-space:nowrap}
-.big small{font-size:.3em;color:var(--mut);margin-left:.35em}
-.fig{position:relative;height:230px;margin-top:16px}.fig svg{position:absolute;inset:0;width:100%;height:100%}
-.note{font-size:14px;color:var(--dim)}
-
-/* måleren */
-.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,64px);align-items:center}
-ol.leg{list-style:none;padding:0;margin:0 0 22px;display:grid;gap:12px}
-ol.leg li{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start}
-.num{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
-.pin{position:absolute;transform:translate(-50%,-50%);box-shadow:0 0 0 3px rgba(255,255,255,.9)}
-.how{display:grid;gap:12px}
-.how div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.how b{display:block;margin-bottom:2px}
-
-/* appen */
-.feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,72px);align-items:center;margin-top:clamp(40px,6vw,80px)}
-.feature.flip>:first-child{order:2}
-.shot{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#141210;box-shadow:0 24px 60px rgba(0,0,0,.45)}
-.shot img{width:100%;height:auto;display:block}
-.gauges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:clamp(28px,4vw,44px)}
-.gauges figure{margin:0}.gauges figcaption{text-align:center;color:var(--mut);font-size:14.5px;margin-top:10px}
-ul.tick{list-style:none;padding:0;margin:0;display:grid;gap:9px}
-ul.tick li{padding-left:26px;position:relative;color:var(--mut)}ul.tick li b{color:var(--ink);font-weight:500}
-ul.tick li::before{content:"";position:absolute;left:2px;top:.62em;width:10px;height:10px;border-radius:50%;border:2px solid var(--brass)}
-.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px;margin-top:clamp(40px,6vw,72px)}
-.chips div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
-.chips b{display:block;font-family:"Source Serif 4",serif;font-size:19px;font-weight:600;margin-bottom:4px}
-.chips span{color:var(--mut);font-size:15px}
-
-/* jeger og restaurant */
-.modes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:28px}
-.mode{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(22px,3vw,34px)}
-.mode img{height:110px;width:auto;border-radius:12px;display:block;margin-bottom:16px}
-
-/* lisens, spørsmål, kontakt */
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,5vw,64px)}
-details{border-bottom:1px solid var(--line);padding:15px 0}summary{cursor:pointer;font-weight:500}details p{margin:.6em 0 0;color:var(--mut)}
-.contact{text-align:center}.contact p{margin-inline:auto}
-.mailrow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 14px;max-width:none}
-.mail{font-family:"Source Serif 4",serif;font-size:clamp(20px,2.8vw,30px);color:var(--brass2);overflow-wrap:anywhere;user-select:all}
-.copy{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 15px Inter,sans-serif;cursor:pointer}
-.copied{color:var(--mut);font-size:14px;min-width:4em}
-.kontakt{max-width:680px;margin:10px auto 0;border:1px solid var(--line);border-radius:14px;padding:0 20px;text-align:left}
-.kontakt summary{padding:14px 0;color:var(--brass2);font-weight:500}
-.kgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 24px;padding-bottom:6px}.kgrid p{color:var(--ink);margin:0 0 14px}
-@media(max-width:600px){.kgrid{grid-template-columns:minmax(0,1fr)}}
-footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px solid var(--line);text-align:center}
-
-@media(max-width:860px){.ihero,.calc,.mgrid,.feature,.two{grid-template-columns:minmax(0,1fr)}.feature.flip>:first-child{order:0}.meter{max-width:340px}}
-@media(max-width:600px){nav .l{display:none}.three,.modes{grid-template-columns:minmax(0,1fr)}.gauges{grid-template-columns:minmax(0,1fr)}.vctl button span{display:none}.vctl button{padding:0 14px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* Midlertidig forside mens landingssiden gjøres ferdig. Samme farger som appen. */
+:root{color-scheme:dark;--ink:#efe7da;--mut:#b5aa99;--line:#36312b;--brass:#c9a46a;--brass2:#e2c48d}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;min-height:100%;display:grid;place-items:center;padding:32px 20px;color:var(--ink);font:16.5px/1.6 Inter,system-ui,sans-serif;
+ background:radial-gradient(70% 80% at 50% 38%,#3a2e20 0%,#1b1815 48%,#121110 82%) #121110}
+main{text-align:center;max-width:620px}
+.logo{font-family:"Source Serif 4",Georgia,serif;font-size:clamp(46px,10vw,92px);letter-spacing:.32em;margin-right:-.32em;color:var(--brass2);font-weight:400;line-height:1;margin-bottom:22px}
+.rule{width:180px;height:1px;background:var(--brass);opacity:.6;margin:0 auto 24px}
+h1{font-family:"Source Serif 4",Georgia,serif;font-style:italic;font-weight:400;font-size:clamp(26px,4.6vw,38px);margin:0 0 30px;line-height:1.2}
+.meter{width:min(240px,56vw);margin:0 auto 30px;filter:drop-shadow(0 22px 30px rgba(0,0,0,.6))}
+.meter img{width:100%;height:auto;display:block}
+p{color:var(--mut);margin:0 auto 26px;max-width:46ch}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 28px;border-radius:999px;background:var(--brass);color:#1a1510;font-weight:600;text-decoration:none}
+.btn:focus-visible{outline:2px solid var(--brass2);outline-offset:3px}
+small{display:block;margin-top:40px;color:#8c8275;font-size:13.5px}
 </style>
 </head>
 <body>
-<nav><div class="wrap">
- <a class="logo" href="#top">MODNA</a>
- <a class="l" href="#dogngrader">Døgngrader</a><a class="l" href="#maleren">Måleren</a><a class="l" href="#appen">Appen</a><a class="l" href="#bruk">Jeger og restaurant</a>
- <a class="btn ghost" href="app/">Åpne appen</a><a class="btn" href="#kontakt">Bestill</a>
-</div></nav>
-
-<section class="film" id="top" aria-label="Film om Modna">
- <video id="vid" autoplay muted playsinline preload="auto" poster="film/plakat.jpg">
-  <source src="film/modna.mp4" type="video/mp4">
- </video>
- <div class="vfail"><div>MODNA</div></div>
- <div class="vctl">
-  <button type="button" id="bPlay" aria-label="Pause"><svg viewBox="0 0 24 24"><path id="iPlay" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg><span id="tPlay">Pause</span></button>
-  <button type="button" id="bSound" aria-label="Slå på lyd"><svg viewBox="0 0 24 24"><path id="iSound" d="M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg><span id="tSound">Slå på lyd</span></button>
- </div>
-</section>
-
-<header class="band intro"><div class="wrap ihero">
- <div>
-  <p class="kick">Måler for modning av kjøtt</p>
-  <h1>Vit når kjøttet er <em>klart.</em></h1>
-  <p class="lead">Modna henger ved kjøttet og teller modningen hele tiden, i døgngrader eller dager. Svaret står rett på skjermen. Ingen app, ingen konto, ingen dekning nødvendig.</p>
-  <div class="cta"><a class="btn" href="#kontakt">Bestill målere</a><a class="btn ghost" href="#dogngrader">Regn på modningen</a></div>
- </div>
- <div class="meter"><div class="glow"></div><img src="img/maaler.png" alt="Modna-måleren med 25,3 døgngrader og 23 grader i displayet" width="900" height="845"></div>
-</div>
-<div class="wrap three">
- <div><b>Følger kjøttet</b><span>Måleren henger ved stykket, ikke i skapet. Flyttes kjøttet, flytter målingen med.</span></div>
- <div><b>Teller riktig</b><span>Bare temperatur over 0 °C teller. Frossent kjøtt modnes ikke.</span></div>
- <div><b>Virker alltid</b><span>Displayet viser svaret uten mobil. Appen er et tillegg for mer innsikt.</span></div>
-</div></header>
-
-<section class="band alt" id="dogngrader"><div class="wrap calc">
- <div>
-  <h2>Døgngrader, ikke antall dager</h2>
-  <p class="lead">Kjøtt modnes raskere når det er varmere. Derfor teller jegere døgngrader: døgnets middeltemperatur lagt sammen, døgn for døgn.</p>
-  <p>Fem døgn på 4 °C gir 20 døgngrader. Fem døgn på 8 °C gir 40. Like mange dager, dobbelt så mye modning.</p>
-  <p>Når dyret henger ute, svinger temperaturen fra time til time. Modna måler hele tiden og legger sammen for deg, så du slipper å regne og gjette.</p>
-  <p class="note">Veiledende mål for hjortevilt fra Norsk Hjortesenter: rundt 40 for kalv, 40 til 50 er vanlig, eldre dyr gjerne 60 til 120.</p>
- </div>
- <div class="panel">
-  <div class="row"><label for="t">Snittemperatur <output id="tv">4,0 °C</output></label><input id="t" type="range" min="0.5" max="12" step="0.5" value="4"></div>
-  <div class="row"><div class="lab">Mål <output id="mv">45 døgngrader</output></div>
-   <div class="seg" id="maal"><button type="button" data-v="40" aria-pressed="false">40 kalv</button><button type="button" data-v="45" aria-pressed="true">45</button><button type="button" data-v="50" aria-pressed="false">50</button><button type="button" data-v="80" aria-pressed="false">80 eldre dyr</button></div></div>
-  <div class="big" id="res">11,3<small>døgn</small></div>
-  <p class="note" id="rest" style="margin:.4em 0 0">til 45 døgngrader ved jevn 4,0 °C</p>
-  <div class="fig"><svg id="cs" aria-hidden="true"></svg></div>
-  <p class="note" style="margin:10px 0 0">Forenklet med jevn temperatur. I virkeligheten svinger den, og derfor teller måleren hele tiden.</p>
- </div>
-</div></section>
-
-<section class="band" id="maleren"><div class="wrap mgrid">
- <div>
-  <h2>Svaret står på skjermen</h2>
-  <p class="lead">Heng måleren ved kjøttet og les av. Alt du trenger for å vite når kjøttet er klart, vises i displayet.</p>
-  <ol class="leg">
-   <li><span class="num">1</span><span><b>Døgngrader</b> så langt i perioden.</span></li>
-   <li><span class="num">2</span><span><b>Modus:</b> «–» for vilt, «=» for restaurant.</span></li>
-   <li><span class="num">3</span><span><b>Temperaturen</b> akkurat nå, i hele grader.</span></li>
-   <li><span class="num">4</span><span><b>Bluetooth</b> når appen er koblet til.</span></li>
-   <li><span class="num">5</span><span><b>Batteri.</b> Vanlig CR2032.</span></li>
-   <li><span class="num">6</span><span><b>Smilefjes</b> når målet er nådd, hvis det er slått på i appen.</span></li>
-  </ol>
-  <div class="how">
-   <div><b>Ny periode</b>En binders fra Reset til Gnd under bakplaten i ett sekund, eller fra appen. Tellingen starter på nytt.</div>
-   <div><b>Bytte mellom vilt og restaurant</b>Hold bindersen i ti sekunder til symbolet blinker, eller velg i appen.</div>
-  </div>
- </div>
- <div class="meter" style="max-width:460px">
-  <img src="img/maaler.png" alt="Displayet på Modna med nummererte felter" width="900" height="845">
-  <span class="num pin" style="left:46.4%;top:27.9%">1</span><span class="num pin" style="left:82.8%;top:45.5%">2</span><span class="num pin" style="left:76.7%;top:62.1%">3</span><span class="num pin" style="left:60.2%;top:15.9%">4</span><span class="num pin" style="left:77.6%;top:13.5%">5</span><span class="num pin" style="left:29%;top:69.5%">6</span>
- </div>
-</div></section>
-
-<section class="band alt" id="appen"><div class="wrap">
- <h2>Appen gir deg hele bildet</h2>
- <p class="lead">Åpne modna.info-web.no/app i nettleseren og koble til måleren over Bluetooth. Ingenting å laste ned, ingen konto.</p>
-
- <div class="feature">
-  <div class="shot"><img src="img/hovedtall.jpg" alt="Døgngrader og fremdrift mot målet i appen"></div>
-  <div><h3>Hvor langt har modningen kommet?</h3><p>Døgngradene står stort øverst, og stolpen under viser hvor nær målet du er. Appen regner også ut omtrent når målet nås, ut fra temperaturen så langt.</p></div>
- </div>
-
- <div class="gauges">
-  <figure><div class="shot"><img src="img/temp.jpg" alt="Temperatur"></div><figcaption>Temperatur</figcaption></figure>
-  <figure><div class="shot"><img src="img/fukt.jpg" alt="Luftfuktighet"></div><figcaption>Luftfuktighet</figcaption></figure>
-  <figure><div class="shot"><img src="img/dugg.jpg" alt="Duggpunkt"></div><figcaption>Duggpunkt</figcaption></figure>
- </div>
- <p style="margin-top:18px;max-width:none" class="lead">Tre analoge instrumenter viser forholdene rundt kjøttet akkurat nå. Fuktighet og duggpunkt sier om overflaten tørker som den skal, eller om det er fare for kondens.</p>
-
- <div class="feature flip">
-  <div class="shot"><img src="img/modus.jpg" alt="Valg mellom vilt og restaurant"></div>
-  <div><h3>Vilt eller restaurant</h3><p>Velg hvordan måleren skal telle. For vilt teller den døgngrader. For restaurant teller den dager, slik det er vanlig ved tørrmodning, eller døgngrader om du heller vil det.</p></div>
- </div>
-
- <div class="feature">
-  <div class="shot"><img src="img/maal.jpg" alt="Innstilling av mål"></div>
-  <div><h3>Sett målet, få beskjed</h3><p>Målet settes i appen og lagres i måleren, uten å åpne den. Slår du på smilefjeset, tennes det i displayet når målet er nådd. Da ser du det i forbifarten, uten mobil.</p></div>
- </div>
-
- <div class="chips">
-  <div><b>Anslag med værvarsel</b><span>Henger dyret ute, bruker appen værvarselet fra Meteorologisk institutt til å anslå når kjøttet er klart.</span></div>
-  <div><b>Graf og historikk</b><span>Måleren lagrer temperatur og fuktighet time for time. Appen henter dem og viser hele perioden som graf.</span></div>
-  <div><b>Alle målerne samlet</b><span>Hver måler har sin egen kode, for eksempel 4AF2. Appen viser status for alle målerne du har koblet til.</span></div>
-  <div><b>Råd og lærebok</b><span>Tips om modning og mørning, for vilt og restaurant, på norsk og engelsk.</span></div>
-  <div><b>Oppdateringer</b><span>Ny programvare til måleren installeres fra appen, over Bluetooth.</span></div>
-  <div><b>Home Assistant</b><span>Måleren sender målingene i BTHome-formatet, som Home Assistant leser direkte.</span></div>
- </div>
-</div></section>
-
-<section class="band" id="bruk"><div class="wrap">
- <h2>For jegeren og for restauranten</h2>
- <div class="modes">
-  <div class="mode">
-   <img src="img/ikon-hjort.jpg" alt="">
-   <h3>Vilt, hel skrott eller kvarter</h3>
-   <ul class="tick">
-    <li><b>Teller døgngrader.</b> Det som faktisk avgjør modningen når temperaturen svinger.</li>
-    <li>Følger skrotten fra felling via henging til partering.</li>
-    <li>Anslag med værvarsel når dyret henger ute.</li>
-    <li>Virker på hytta og i skogen, uten mobil og dekning.</li>
-    <li>Måleren må henge beskyttet mot regn.</li>
-   </ul>
-  </div>
-  <div class="mode">
-   <img src="img/ikon-skap.jpg" alt="">
-   <h3>Restaurant og stykningsdeler</h3>
-   <ul class="tick">
-    <li><b>Teller dager,</b> som er vanlig ved tørrmodning. Målet kan også følge døgngrader.</li>
-    <li>Én måler per stykke, merket med samme kode som kjøttet.</li>
-    <li>Måleren følger kjøttstykket, ikke skapet. Historikken følger med når stykket flyttes.</li>
-    <li>Fuktighet og duggpunkt for kontroll med tørkingen.</li>
-   </ul>
-  </div>
- </div>
-</div></section>
-
-<section class="band alt" id="lisens"><div class="wrap two">
- <div>
-  <h2>Måleren virker alltid</h2>
-  <p class="lead">Displayet, tellingen og ny periode virker uten app og uten abonnement.</p>
-  <p>Appen kan prøves gratis i fem dager per måler. Deretter bestilles lisens per måler. Programvareoppdatering av måleren er åpen for alle.</p>
- </div>
- <div>
-  <details><summary>Teller den når det er kuldegrader?</summary><p>Nei. Temperatur under 0 °C gir ingen døgngrader, fordi frossent kjøtt ikke modnes. Tellingen fortsetter når det blir varmere.</p></details>
-  <details><summary>Må jeg ha med mobilen?</summary><p>Nei. Svaret står i displayet. Appen er for den som vil se graf, fuktighet, anslag og historikk.</p></details>
-  <details><summary>Hvilke telefoner virker appen på?</summary><p>Appen bruker Bluetooth i nettleseren. Det virker i Chrome, Edge og Vivaldi på Android og PC.</p><p>På iPhone og iPad støtter ingen av de vanlige nettleserne Bluetooth fra nettsider, heller ikke Chrome og Edge, fordi de bruker samme motor som Safari. Egne nettlesere fra App Store, som Bluefy, legger til Bluetooth, men de er ikke testet med Modna ennå.</p></details>
-  <details><summary>Hva slags batteri bruker den?</summary><p>Et vanlig CR2032 knappcellebatteri. Batteriet følger med, og nye får du kjøpt i de aller fleste dagligvarebutikker.</p></details>
-  <details><summary>Hvordan skiller jeg målerne fra hverandre?</summary><p>Hver måler har en kode på fire tegn, for eksempel 4AF2. Koden står bak på måleren når du får den, og den vises i appen. Samme kode kan stå på merkelappen på kjøttstykket.</p></details>
- </div>
-</div></section>
-
-<section class="band contact" id="kontakt"><div class="wrap">
- <h2>Bestill eller spør</h2>
- <p class="lead">Skriv hvor mange målere du trenger, og om de skal brukes til vilt eller restaurant.</p>
- <p class="mailrow"><span class="mail" id="mail">hans.einar.steinsland@gmail.com</span> <button type="button" class="copy" id="copyMail">Kopier</button> <span class="copied" id="copied" role="status"></span></p>
- <details class="kontakt"><summary>Kontaktinformasjon</summary>
-  <div class="kgrid">
-   <p>Hans Einar Steinsland<br>Prestagarden 75<br>4130 Hjelmeland</p>
-   <p>E-post: hans.einar.steinsland@gmail.com<br>Telefon: +47 938 22 938<br>Org.nr.: 982 820 073</p>
-  </div>
- </details>
- <p style="margin-top:28px"><a class="btn ghost" href="app/">Åpne appen</a></p>
-</div></section>
-
-<footer>© 2026 Hans Einar Steinsland · Modna · modna.info-web.no</footer>
-
-<script>
-{
-// film: starter uten lyd (nettlesere tillater ikke autostart med lyd)
-const v=document.getElementById('vid'),film=v.closest('.film');
-const bP=document.getElementById('bPlay'),bS=document.getElementById('bSound');
-const iP=document.getElementById('iPlay'),tP=document.getElementById('tPlay'),tS=document.getElementById('tSound'),iS=document.getElementById('iSound');
-const PAUSE='M7 5h4v14H7zM13 5h4v14h-4z',PLAY='M8 5v14l11-7z',REPLAY='M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z';
-const MUTED='M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6',LOUD='M4 9h4l5-4v14l-5-4H4zM16 8a5 5 0 0 1 0 8M18.5 5.5a9 9 0 0 1 0 13';
-const ui=()=>{const ended=v.ended;iP.setAttribute('d',ended?REPLAY:v.paused?PLAY:PAUSE);tP.textContent=ended?'Se igjen':v.paused?'Spill av':'Pause';bP.setAttribute('aria-label',tP.textContent);
- iS.setAttribute('d',v.muted?MUTED:LOUD);iS.setAttribute('fill',v.muted?'currentColor':'none');tS.textContent=v.muted?'Slå på lyd':'Slå av lyd';bS.setAttribute('aria-label',tS.textContent)};
-bP.addEventListener('click',()=>{if(v.paused||v.ended)v.play().catch(()=>{});else v.pause()});
-bS.addEventListener('click',()=>{v.muted=!v.muted;if(!v.muted&&v.paused)v.play().catch(()=>{});ui()});
-v.addEventListener('click',()=>bP.click());
-['play','pause','ended','volumechange'].forEach(e=>v.addEventListener(e,ui));
-const fail=()=>film.classList.add('nofilm');
-v.querySelector('source').addEventListener('error',fail);v.addEventListener('error',fail);
-// pause når filmen er rullet ut av syne
-const io=new IntersectionObserver(es=>{for(const e of es)if(!e.isIntersecting&&!v.paused)v.pause()},{threshold:.15});io.observe(v);
-ui();
-
-// e-postadressen kopieres, ingen e-postlenke
-document.getElementById('copyMail').addEventListener('click',async()=>{const el=document.getElementById('mail'),c=document.getElementById('copied');
- try{await navigator.clipboard.writeText(el.textContent);c.textContent='Kopiert'}catch{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent='Markert, kopier med Ctrl+C'}});
-
-// kalkulator
-const t=document.getElementById('t'),tv=document.getElementById('tv'),mv=document.getElementById('mv'),res=document.getElementById('res'),rest=document.getElementById('rest'),cs=document.getElementById('cs');
-let maal=45;const nf=x=>x.toLocaleString('nb-NO',{minimumFractionDigits:1,maximumFractionDigits:1});
-const draw=()=>{const T=+t.value,d=maal/T;tv.textContent=nf(T)+' °C';mv.textContent=maal+' døgngrader';res.innerHTML=nf(d)+'<small>døgn</small>';rest.textContent=`til ${maal} døgngrader ved jevn ${nf(T)} °C`;
- const W=cs.clientWidth,H=cs.clientHeight;if(!W)return;const L=30,B=24,R=8,Tp=12,maxD=Math.max(20,Math.ceil(d/5)*5+5),maxG=Math.max(maal*1.3,60);
- const x=q=>L+q/maxD*(W-L-R),y=q=>H-B-q/maxG*(H-B-Tp);let s='';const st=maxD>40?10:5;
- for(let q=0;q<=maxD;q+=st)s+=`<line x1="${x(q)}" x2="${x(q)}" y1="${Tp}" y2="${H-B}" stroke="#2c2823"/><text x="${x(q)}" y="${H-5}" fill="#8c8275" font-size="12" text-anchor="middle">${q}</text>`;
- s+=`<text x="${W-R}" y="${H-B-6}" fill="#8c8275" font-size="12" text-anchor="end">døgn</text>`;
- s+=`<line x1="${L}" x2="${W-R}" y1="${y(maal)}" y2="${y(maal)}" stroke="#c9a46a" stroke-dasharray="5 7"/><text x="${L+4}" y="${y(maal)-7}" fill="#c9a46a" font-size="12">mål ${maal}</text>`;
- const ln=(tp,col,lab)=>{const e=Math.min(maxD,maxG/tp);s+=`<path d="M${x(0)} ${y(0)}L${x(e)} ${y(e*tp)}" stroke="${col}" stroke-width="2" fill="none" opacity=".55"/>`;if(W>420)s+=`<text x="${x(e)-4}" y="${y(e*tp)+16}" fill="${col}" font-size="12" text-anchor="end">${lab}</text>`};
- ln(2,'#8fb3c9','2 °C');ln(8,'#e0a15e','8 °C');
- s+=`<path d="M${x(0)} ${y(0)}L${x(d)} ${y(maal)}" stroke="#efe7da" stroke-width="3.5" fill="none"/><circle cx="${x(d)}" cy="${y(maal)}" r="6" fill="#c9a46a"/>`;
- cs.innerHTML=s};
-t.addEventListener('input',draw);
-document.getElementById('maal').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;maal=+b.dataset.v;for(const c of b.parentNode.children)c.setAttribute('aria-pressed',c===b);draw()});
-const ro=new ResizeObserver(draw);ro.observe(cs);draw();
-}
-</script>
+<main>
+ <div class="logo">MODNA</div>
+ <div class="rule"></div>
+ <h1>Vit når kjøttet er klart.</h1>
+ <div class="meter"><img src="img/maaler.png" alt="Modna-måleren" width="900" height="845"></div>
+ <p>En liten måler som henger ved kjøttet og teller modningen i døgngrader eller dager. Siden er under bygging.</p>
+ <a class="btn" href="app/?demo">Prøv demo av appen</a>
+ <small>© 2026 Hans Einar Steinsland · Hjelmeland</small>
+</main>
 </body>
 </html>
