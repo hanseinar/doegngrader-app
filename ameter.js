@@ -26,7 +26,6 @@
 (function (root) {
   "use strict";
   let uid = 0;
-  const NS = "http://www.w3.org/2000/svg";
 
   class AnalogMeter {
     constructor(el, opts) {

@@ -1,7 +1,8 @@
-// license.js - abonnement per måler fra admin/ (versjon 2, 2026-11-22).
+// license.js - lisens per måler fra admin/ (svar versjon 3, 2026-11-23).
 //
-// Appen er betalt. Med lisens (prøveperiode eller abonnement) er alt åpent; uten
-// lisens viser appen bare demo, men firmwareoppdatering er åpen.
+// Appen er betalt. Med lisens (prøveperiode eller lisens til en dato) er alt åpent;
+// uten lisens viser appen bare demo, men firmwareoppdatering er åpen.
+// Bestilling og forlengelse skjer på e-post (ORDER_EMAIL), ikke i appen.
 // Av til SERVER og PUBKEY er satt (da er appen åpen som før). For test kan
 // localStorage 'dg.licServer' og 'dg.licPubkey' overstyre.
 // Svaret er signert med Ed25519 og lagres per måler. Uten nett gjelder lagret svar
@@ -9,6 +10,7 @@
 
 export const SERVER = '';     // f.eks. 'https://kunder.info-web.no'
 export const PUBKEY = '';     // fra /api/v1/pubkey (base64url, 32 byte)
+export const ORDER_EMAIL = 'hans.einar.steinsland@gmail.com';   // bestilling og forlengelse
 
 function ls(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* privat modus */ } }
@@ -16,7 +18,7 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* privat
 export function config() {
   const server = (ls('dg.licServer') || SERVER).replace(/\/+$/, '');
   const pubkey = ls('dg.licPubkey') || PUBKEY;
-  return server ? { server, pubkey, minside: `${server}/min-side/` } : null;
+  return server ? { server, pubkey } : null;
 }
 
 // Samme byteform som serveren signerer (Python json.dumps, sort_keys, uten mellomrom, ensure_ascii=False).
@@ -62,9 +64,18 @@ export function access(doc, now = new Date()) {
   return { ok: false, kind: null, until: null, status: doc.status === 'prove' || doc.status === 'aktiv' ? 'utlopt' : doc.status };
 }
 
-export function orderUrl(serial) {
-  const cfg = config();
-  return cfg ? `${cfg.server}/min-side/bestill?serial=${encodeURIComponent(serial || '')}` : null;
+// E-post til ORDER_EMAIL. subject og body er ferdig tekst (oversatt i appen).
+export function orderMail(subject, body) {
+  return `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// Sist lagrede svar for måleren (bare til visning i målerlista; tilgang avgjøres i load).
+export function stored(serial) {
+  if (!serial) return null;
+  try {
+    const doc = JSON.parse(ls(`dg.lic.${serial}`) || 'null');
+    return doc && doc.serial === serial ? doc : null;
+  } catch (e) { return null; }
 }
 
 // Har måleren hatt tilgang på denne telefonen? Brukes til tilbakestilling ved utløp.

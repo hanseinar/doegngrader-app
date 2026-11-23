@@ -3,9 +3,11 @@
 import * as P from './protocol.js';
 import * as L from './logic.js';
 import { connect } from './ble.js';
-import { $, applyTexts, connected, devInfo, fmt, fmtDay, fmtRh, fmtT, fmtTime, fmtWhen, locale, settings, state, t } from './core.js';
+import { $, applyTexts, connected, devInfo, fmt, fmtDay, fmtRh, fmtT, fmtTime, fmtWhen, locale, settings, state, store, t } from './core.js';
 import { forecastEta, renderForecast } from './forecast.js';
 import { updateOtaButton } from './ota.js';
+import * as LIC from './license.js';
+import { licEnabled, licStatus, orderMailFor } from './order.js';
 
 export function renderConn(phase) {
   const lamp = $('conn-lamp'), txt = $('conn-txt'), btn = $('conn');
@@ -329,7 +331,10 @@ export function knownMeters() {
       if (m) out.push({ id: m[1], ...store.get('dev.' + m[1], {}) });
     }
   } catch (e) { /* ingen lagring */ }
-  return out.filter((m) => m.last).sort((a, b) => b.last.at - a.last.at);
+  // Uten lisens slettes verdiene (subscription.js), men måleren vises med status når lisens er på.
+  const lic = licEnabled();
+  return out.filter((m) => m.last || (lic && m.serial))
+    .sort((a, b) => (b.last ? b.last.at : 0) - (a.last ? a.last.at : 0));
 }
 
 export function renderMeters() {
@@ -345,14 +350,23 @@ export function renderMeters() {
     b.className = 'meter-card';
     const L1 = document.createElement('span'); L1.className = 'mc-name'; L1.textContent = m.name || `DG-${m.id}`;
     const L2 = document.createElement('span'); L2.className = 'mc-id'; L2.textContent = m.name ? `DG-${m.id}` : '';
-    const L3 = document.createElement('span'); L3.className = 'mc-vals';
-    L3.textContent = [`${fmt(Math.floor(m.last.dg * 10) / 10)} dg`, m.last.tempC !== null ? fmtT(m.last.tempC) : null, m.last.rh !== null ? fmtRh(m.last.rh) : null].filter(Boolean).join('  ·  ');
-    const L4 = document.createElement('span'); L4.className = 'mc-when'; L4.textContent = t('meters.last', { when: fmtWhen(new Date(m.last.at)) });
-    b.append(L1, L2, L3, L4);
+    b.append(L1, L2);
+    if (m.last) {
+      const L3 = document.createElement('span'); L3.className = 'mc-vals';
+      L3.textContent = [`${fmt(Math.floor(m.last.dg * 10) / 10)} dg`, m.last.tempC !== null ? fmtT(m.last.tempC) : null, m.last.rh !== null ? fmtRh(m.last.rh) : null].filter(Boolean).join('  ·  ');
+      const L4 = document.createElement('span'); L4.className = 'mc-when'; L4.textContent = t('meters.last', { when: fmtWhen(new Date(m.last.at)) });
+      b.append(L3, L4);
+    }
+    const st = licEnabled() ? licStatus(LIC.stored(m.serial)) : null;
+    if (st) { const L5 = document.createElement('span'); L5.className = `mc-lic ${st.cls}`; L5.textContent = st.text; b.append(L5); }
     b.addEventListener('click', () => connect(m.id));
     li.appendChild(b);
     ul.appendChild(li);
   }
+  // Bestill eller forleng for alle målerne telefonen kjenner (én e-post)
+  const mail = licEnabled() ? orderMailFor(list) : null;
+  $('meters-order').hidden = !mail;
+  if (mail) $('meters-order').href = mail;
 }
 
 // ---------- oppstart ----------

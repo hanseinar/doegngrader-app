@@ -1,10 +1,9 @@
 // ota.js - firmwareoppdatering (OTA) og versjon av appen
 // Del av appen (app.js). Delt ut fra app.js 2026-11-22, funksjonene er uendret.
 import * as P from './protocol.js';
-import * as L from './logic.js';
 import { BUILD } from './version.js';
 import { readDiag } from './ble.js';
-import { $, connected, fmtWhen, log, state, store, t } from './core.js';
+import { $, connected, fmtWhen, log, state, t } from './core.js';
 import { renderDebug } from './view.js';
 
 // ---------- byggeinfo ----------

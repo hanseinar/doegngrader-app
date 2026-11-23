@@ -22,7 +22,6 @@ export const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, Math.round(v)));
 
 export function renderSync() {
   const el = $('set-sync');
-  const name = state.device ? state.device.name : '';
   el.classList.toggle('bad', state.setState === 'failed');
   // «Lagret i måleren» vises ikke (2026-11-22), bare det brukeren må vite
   el.textContent = {

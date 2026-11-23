@@ -3,7 +3,7 @@
 import * as P from './protocol.js';
 import * as L from './logic.js';
 import { onDisconnected, onStatus } from './ble.js';
-import { $, connected, settings, state } from './core.js';
+import { $, settings, state } from './core.js';
 import { syncSettingsOnConnect } from './settingsui.js';
 import { checkLicense, maybeResetAfterExpiry } from './subscription.js';
 import { render, renderConn } from './view.js';

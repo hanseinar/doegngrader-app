@@ -236,6 +236,10 @@ body.overview .hero, body.overview .gauges, body.overview .gauge-state, body.ove
 .mc-id { color: var(--muted); font-size: .9rem; justify-self: end; }
 .mc-vals { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
 .mc-when { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
+.mc-lic { grid-column: 1 / -1; font-size: .85rem; font-weight: 600; }
+.mc-lic.lic-ok { color: var(--ok, #2f8a4f); }
+.mc-lic.lic-trial { color: var(--accent); }
+.mc-lic.lic-none { color: var(--bad, #b8261b); }
 
 /* ---------- bruk og språk: to kort side om side ---------- */
 .usecards, .langcards { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
