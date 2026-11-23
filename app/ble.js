@@ -12,7 +12,23 @@ import { render, renderConn, renderDebug, toggleConnPop } from './view.js';
 import { pullOverview } from './sync.js';
 
 // ---------- Bluetooth ----------
-export const CONNECT_TIMEOUT_MS = 15000;
+export const CONNECT_TIMEOUT_MS = 25000;   // 2026-11-23: var 15 s; måleren sender hvert 3. (0.6.6) eller 5. sekund
+export const CONNECT_TRIES = 2;            // ett nytt forsøk før feilmelding
+
+// gatt.connect() med frist og ett nytt forsøk. Første forsøk bommer av og til
+// når måleren sender sjelden; det andre lykkes som regel med en gang.
+export async function gattConnect(device) {
+  for (let i = 1; ; i++) {
+    try {
+      return await withTimeout(device.gatt.connect(), CONNECT_TIMEOUT_MS, t('err.timeout'));
+    } catch (e) {
+      try { device.gatt.disconnect(); } catch (x) { /* ikke tilkoblet */ }
+      if (i >= CONNECT_TRIES) throw e;
+      log(`Tilkobling forsøk ${i} feilet (${e.message}), prøver igjen`);
+      connMsg(t('conn.retry', { name: device.name }));
+    }
+  }
+}
 // Målere nettleseren allerede har gitt tilgang til (getDevices), uten enhetslista.
 // Ikke alle nettlesere har getDevices; da brukes lista som før. Venter på en
 // reklame (watchAdvertisements) før tilkobling, fordi måleren må være i nærheten.
@@ -68,7 +84,9 @@ export async function connect(wantId) {
     device.addEventListener('gattserverdisconnected', onDisconnected);
     renderConn('wait');
     log(`Kobler til ${device.name}`);
-    const server = await withTimeout(device.gatt.connect(), CONNECT_TIMEOUT_MS, t('err.timeout'));
+    connMsg(t('conn.waiting', { name: device.name }));
+    const server = await gattConnect(device);
+    connMsg('');
     const svc = await server.getPrimaryService(P.UUID.service);
     for (const k of ['status', 'histInfo', 'histCtl', 'histData']) state.chars[k] = await svc.getCharacteristic(P.UUID[k]);
     try {
