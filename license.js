@@ -3,13 +3,13 @@
 // Appen er betalt. Med lisens (prøveperiode eller lisens til en dato) er alt åpent;
 // uten lisens viser appen bare demo, men firmwareoppdatering er åpen.
 // Bestilling og forlengelse skjer på e-post (ORDER_EMAIL), ikke i appen.
-// Av til SERVER og PUBKEY er satt (da er appen åpen som før). For test kan
+// På fra 2026-11-23 (SERVER og PUBKEY satt). Tomme verdier slår lisens av. For test kan
 // localStorage 'dg.licServer' og 'dg.licPubkey' overstyre.
 // Svaret er signert med Ed25519 og lagres per måler. Uten nett gjelder lagret svar
 // til den første av: prøveperiodens slutt eller abonnementets siste dag, og exp.
 
-export const SERVER = '';     // f.eks. 'https://kunder.info-web.no'
-export const PUBKEY = '';     // fra /api/v1/pubkey (base64url, 32 byte)
+export const SERVER = 'https://kunde.modna.info-web.no';          // admin/ (lisens-API)
+export const PUBKEY = 'bBamFqNVzzlK_R5MTa9whwL8RYDSG3jJL_zl4z8V0F8';  // fra /api/v1/pubkey (base64url, 32 byte)
 export const ORDER_EMAIL = 'hans.einar.steinsland@gmail.com';   // bestilling og forlengelse
 
 function ls(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
