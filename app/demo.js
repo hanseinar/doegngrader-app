@@ -41,7 +41,6 @@ export function demoConnect() {
   v.setUint8(6, 82); v.setUint16(7, 2931, true); v.setUint8(9, 61); v.setUint32(10, sum, true);
   v.setUint16(14, 14, true); v.setUint16(16, 7843, true); v.setUint16(18, 47012, true);
   renderConn('on');
-  $('btn-hist').disabled = false;
   onStatus(v);
   checkLicense().then(async () => {
     if (state.locked) { await maybeResetAfterExpiry(); render(); return; }

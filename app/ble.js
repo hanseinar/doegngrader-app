@@ -100,7 +100,6 @@ export async function connect(wantId) {
     await state.chars.status.startNotifications();
     renderConn('on');
     connMsg('');
-    $('btn-hist').disabled = false;
     log('Tilkoblet');
     startDiagPoll();
     if (state.locked) { await maybeResetAfterExpiry(); return; }
@@ -192,7 +191,6 @@ export function onDisconnected() {
   state.otaDisconnected = true;
   renderConn('off');
   toggleConnPop(false);
-  $('btn-hist').disabled = true;
   // diagnosen gjelder bare mens måleren er tilkoblet
   stopDiagPoll();
   state.diag = null; state.diagAt = null;

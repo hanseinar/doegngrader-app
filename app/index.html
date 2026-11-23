@@ -29,8 +29,6 @@
   <p class="pop-head"><span class="lamp on"></span><strong id="pop-name">DG-0000</strong></p>
   <p class="muted" id="pop-read"></p>
   <p class="muted" id="pop-bat"></p>
-  <label class="field"><span data-t="conn.nameLabel">Navn på måleren</span>
-    <input id="dev-name" type="text" maxlength="40" autocomplete="off" data-t-ph="conn.namePlaceholder"></label>
   <p class="muted small" data-t="conn.autoOff"></p>
   <button id="btn-disconnect" type="button" class="wide" data-t="conn.disconnect">Koble fra</button>
 </div>
@@ -98,6 +96,8 @@
     <details open>
       <summary data-t="settings.title">Innstillinger</summary>
       <div class="lock-hide">
+      <label class="field namefield" id="name-field"><span data-t="conn.nameLabel">Navn på måleren</span>
+        <input id="dev-name" type="text" maxlength="40" autocomplete="off" data-t-ph="conn.namePlaceholder"></label>
       <fieldset>
         <legend data-t="settings.use">Modus</legend>
         <div class="usecards">
@@ -180,8 +180,7 @@
       <summary data-t="hist.menu">Historikk</summary>
       <p class="muted small" data-t="hist.help"></p>
       <div class="btns">
-        <button id="btn-hist" type="button" disabled data-t="hist.fetch">Hent historikk</button>
-        <button id="btn-csv" type="button" disabled data-t="hist.csv">Last ned CSV</button>
+        <button id="btn-csv" type="button" data-t="hist.csv">Last ned CSV</button>
       </div>
       <p class="muted small" id="hist-status"></p>
     </details>

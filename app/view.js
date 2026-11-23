@@ -34,7 +34,6 @@ export function toggleConnPop(show) {
     $('pop-read').textContent = state.statusAt ? t('conn.lastRead', { time: fmtTime(state.statusAt) }) : '';
     const s = state.status, lvl = s ? L.batteryLevel(s.vbatMv) : null, pct = s ? L.batteryPercent(s.vbatMv) : null;
     $('pop-bat').textContent = lvl ? t('conn.battery', { lvl: t('bat.' + lvl), pct: pct !== null ? `${pct} %` : '' }) : '';
-    $('dev-name').value = devInfo().name || '';
   }
   pop.hidden = !show;
 }

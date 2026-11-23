@@ -6,7 +6,7 @@ import { $, connected, HIST_TIMEOUT_MS, log, settings, state, t } from './core.j
 import { demoHistory } from './demo.js';
 import { syncSettingsOnConnect } from './settingsui.js';
 import { render } from './view.js';
-import { pushAfterHistory } from './sync.js';
+import { fetchAllHistory, pushAfterHistory, syncOn } from './sync.js';
 
 export function histMsg(text) { $('hist-note').textContent = text; $('hist-status').textContent = text; }
 
@@ -15,7 +15,6 @@ export async function fetchHistory() {
   if (state.demo) return demoHistory();
   if (state.histBusy || !connected()) return;
   state.histBusy = true;
-  $('btn-hist').disabled = true;
   try {
     const info = await gattQ(async () => P.parseHistInfo(await state.chars.histInfo.readValue()));
     const readAt = Date.now();
@@ -44,7 +43,6 @@ export async function fetchHistory() {
     state.history = got.map((r) => ({ ...r, time: P.hourToTimeMs(r.hour, info, readAt) }));
     log(`Historikk: ${got.length} poster`);
     pushAfterHistory();   // til serveren (sync.js)
-    $('btn-csv').disabled = !got.length;
     render();
     $('hist-status').textContent = t('hist.got', { n: got.length });
   } catch (e) {
@@ -52,13 +50,22 @@ export async function fetchHistory() {
     histMsg(t('hist.failed', { msg: e.message }));
   } finally {
     state.histBusy = false;
-    $('btn-hist').disabled = !connected() && !state.demo;
   }
 }
 
-export function downloadCsv() {
+// CSV med hele historikken som er lagret på serveren for måleren (også det måleren
+// har skrevet over). Uten serveren: det som er hentet fra måleren denne gangen.
+export async function downloadCsv() {
   const lines = ['tid;time_nr;temperatur_c;fuktighet_pst;status'];
-  for (const r of state.history) lines.push([new Date(r.time).toISOString(), r.hour, r.tempC ?? '', r.rh ?? '', P.flagNames(r.flags, P.HIST_FLAGS).join(',')].join(';'));
+  let rows = null;
+  if (syncOn()) {
+    $('hist-status').textContent = t('hist.csvFetching');
+    rows = await fetchAllHistory();
+  }
+  if (rows) for (const r of rows) lines.push([r[1], r[0], r[2] === null ? '' : r[2] / 10, r[3] ?? '', P.flagNames(r[4], P.HIST_FLAGS).join(',')].join(';'));
+  else for (const r of state.history) lines.push([new Date(r.time).toISOString(), r.hour, r.tempC ?? '', r.rh ?? '', P.flagNames(r.flags, P.HIST_FLAGS).join(',')].join(';'));
+  $('hist-status').textContent = t('hist.csvDone', { n: lines.length - 1 });
+  if (lines.length === 1) return;
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([lines.join('\r\n') + '\r\n'], { type: 'text/csv' }));
   a.download = `${state.device?.name || 'dg'}-historikk.csv`;

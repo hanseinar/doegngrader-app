@@ -18,7 +18,7 @@ import { askNewPeriod, connect, doNewPeriod, readDiag, writeCmd } from './ble.js
 import { $, connected, locale, log, saveSettings, setDevInfo, settings, state, t } from './core.js';
 import { demoConnect } from './demo.js';
 import { askPosition } from './forecast.js';
-import { downloadCsv, fetchHistory, refreshAll } from './history.js';
+import { downloadCsv, refreshAll } from './history.js';
 import { checkAppUpdate, loadBuildInfo, loadLatestFirmware, runOta, UPDATE_CHECK_MS, updateApp, updateOtaButton } from './ota.js';
 import { applyTargetFields, applyUse, openSettings, refreshSettingsTexts, setTarget, settingChanged } from './settingsui.js';
 import { buildGauges, closeReader, openReader, period, render, renderChart, renderConn, renderDebug, toggleConnPop } from './view.js';
@@ -64,7 +64,6 @@ function init() {
   // Menyen lukkes med krysset eller Esc. Enter i et felt skal ikke lukke den.
   $('settings').querySelector('form').addEventListener('submit', (e) => e.preventDefault());
   $('btn-menu-close').addEventListener('click', () => $('settings').close());
-  $('btn-hist').addEventListener('click', fetchHistory);
   $('btn-csv').addEventListener('click', downloadCsv);
   $('btn-ota').addEventListener('click', () => runOta('file'));
   $('btn-ota-open').addEventListener('click', async () => {

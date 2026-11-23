@@ -64,6 +64,23 @@ export async function pullOverview() {
   } catch (e) { log(`Henting fra serveren feilet: ${e.message}`); }
 }
 
+// Hele historikken fra serveren, i biter på 20 000 timer: [[time, tid, temp/10, fukt, status]] eller null.
+export async function fetchAllHistory() {
+  const serial = state.serial;
+  const out = [];
+  let from = 0;
+  try {
+    for (;;) {
+      const res = await fetch(`${base(serial)}/historikk?kode=${kode(serial)}&fra=${from}`, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const d = await res.json();
+      out.push(...d.rows);
+      if (!d.more || !d.rows.length) return out;
+      from = d.rows[d.rows.length - 1][0] + 1;
+    }
+  } catch (e) { log(`CSV fra serveren feilet: ${e.message}`); return null; }
+}
+
 // ---------- navn ----------
 export function pushName(name) {
   if (!syncOn()) return;

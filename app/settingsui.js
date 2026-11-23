@@ -2,7 +2,7 @@
 // Del av appen (app.js). Delt ut fra app.js 2026-11-22, funksjonene er uendret.
 import * as P from './protocol.js';
 import { gattQ } from './ble.js';
-import { $, connected, log, saveSettings, settings, state, t } from './core.js';
+import { $, devInfo, connected, log, saveSettings, settings, state, t } from './core.js';
 import { renderFcSettings } from './forecast.js';
 import { buildGauges, render } from './view.js';
 
@@ -46,6 +46,9 @@ function fillSettingsFields() {
 
 export function openSettings() {
   fillSettingsFields();
+  // navnet gjelder måleren som er valgt (lagres også på serveren, sync.js)
+  $('name-field').hidden = !state.devId;
+  $('dev-name').value = devInfo().name || '';
   renderFcSettings();
   $('settings').showModal();
 }
