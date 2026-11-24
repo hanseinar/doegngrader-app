@@ -1,5 +1,5 @@
 // sw.js - gjør siden tilgjengelig uten nett (kjølerom og låve har ofte dårlig dekning)
-const CACHE = 'dg-v47';
+const CACHE = 'dg-v48';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'core.js', 'view.js', 'settingsui.js', 'ble.js', 'history.js', 'forecast.js', 'subscription.js', 'ota.js', 'demo.js', 'protocol.js', 'logic.js', 'i18n.js', 'ameter.js', 'license.js', 'order.js', 'sync.js', 'version.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

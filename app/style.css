@@ -253,6 +253,7 @@ body.overview .hero, body.overview .gauges, body.overview .gauge-state, body.ove
 .usecard svg { width: 100%; max-width: 7rem; height: auto; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .usecard svg .fine { stroke-width: 1.4; opacity: .75; }
 .usecard svg .nose { fill: var(--accent); stroke: none; }
+.usecard svg.traced .nose { stroke: var(--accent); stroke-width: .6; stroke-linejoin: round; }  /* tetter skjøten mot snuten, ligger under streken */
 /* hjorten (vektorisert tegning, docs/kilde/figurer/hjort-symbol.svg): fylte flater, ikke strek */
 .usecard svg.traced .ink { fill: currentColor; fill-rule: evenodd; stroke: none; }
 .usecard svg.traced { max-width: 6.67rem; }  /* viewBox 120 x 126: samme høyde som skapet */
