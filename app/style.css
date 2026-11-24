@@ -138,6 +138,8 @@ section { margin-top: 1.4rem; }
 .field { display: flex; flex-direction: column; gap: .25rem; font-size: .95rem; color: var(--muted); }
 .field input { min-height: var(--touch); padding: 0 .7rem; border: 1px solid var(--edge); border-radius: 8px; background: var(--panel); color: var(--ink); width: 9rem; }
 .pop .field input { width: 100%; }
+.namefield { margin-bottom: .8rem; }
+.namefield input { width: 100%; font-size: 1rem; }
 
 ul.advice { list-style: none; margin: 0 0 .8rem; padding: 0; display: grid; gap: .5rem; }
 .advice li { padding: .7rem .9rem; border-radius: var(--r); background: var(--panel); border-left: 4px solid var(--edge); }
