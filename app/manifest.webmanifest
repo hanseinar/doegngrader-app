@@ -1,7 +1,7 @@
 {
-  "name": "Døgngrader",
-  "short_name": "Døgngrader",
-  "description": "Les av døgngrader-måleren over Bluetooth.",
+  "name": "MODNA",
+  "short_name": "MODNA",
+  "description": "Les av MODNA-måleren over Bluetooth.",
   "lang": "nb",
   "start_url": "./",
   "scope": "./",

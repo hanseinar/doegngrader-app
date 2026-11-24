@@ -4,7 +4,7 @@
 
 export const STRINGS = {
   nb: {
-    'app.title': 'Døgngrader',
+    'app.title': 'MODNA',
     'conn.off': 'Ikke tilkoblet',
     'conn.connecting': 'Kobler til…',
     'conn.on': 'Tilkoblet {name}',
@@ -261,7 +261,7 @@ export const STRINGS = {
     'foot.copy': '© {year} Hans Einar Steinsland',
   },
   en: {
-    'app.title': 'Degree days',
+    'app.title': 'MODNA',
     'conn.off': 'Connect',
     'conn.connecting': 'Connecting…',
     'conn.on': 'Connected to {name}',
