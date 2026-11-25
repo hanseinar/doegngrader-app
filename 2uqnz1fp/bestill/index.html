@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bestill Modne</title>
+<meta name="description" content="Bestill Modne-måleren og appen. Betaling med Vipps.">
+<meta name="theme-color" content="#121110">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../../app/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Bestillingsside. Samme farger og skrift som landingssiden. Betaling i Vipps-butikken:
+   sett VIPPS_URL (lenke) og legg vipps-qr.png i denne mappen når butikken er klar. */
+:root{color-scheme:dark;--bg:#121110;--bg2:#191715;--card:#201d1a;--line:#36312b;--ink:#efe7da;--mut:#b5aa99;--dim:#8c8275;--brass:#c9a46a;--brass2:#e2c48d}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.62 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;font-weight:600;line-height:1.1;margin:0 0 .45em}
+h1{font-size:clamp(36px,5vw,58px)}h2{font-size:clamp(24px,2.6vw,30px)}
+p{margin:0 0 1em;max-width:62ch}a{color:var(--brass2)}
+nav{position:sticky;top:0;z-index:20;background:rgba(18,17,16,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .in{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:10px max(5vw,18px)}
+.logo{font-family:"Source Serif 4",serif;font-size:21px;letter-spacing:.34em;color:var(--brass2);text-decoration:none;margin-right:auto}
+.wrap{max-width:1000px;margin:0 auto;padding:clamp(36px,6vw,80px) max(5vw,18px)}
+.lead{font-size:clamp(17px,1.6vw,19.5px);color:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 24px;border-radius:999px;background:var(--brass);color:#1a1510;font-weight:600;text-decoration:none;border:0;font-size:16px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+nav .btn{min-height:40px;padding:0 18px;font-size:15px}
+.pcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:26px 0 40px}
+.pcards div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+.pcards .pl{display:block;color:var(--mut);font-size:14px}
+.pcards b{display:block;font-family:"Source Serif 4",serif;font-size:clamp(28px,3vw,36px);color:var(--brass2);margin:4px 0 6px}
+.pcards span{color:var(--mut);font-size:15px}
+.pay{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:clamp(24px,4vw,56px);align-items:start;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:clamp(22px,3vw,36px)}
+ol.steps{padding-left:1.3em;color:var(--mut);margin:0 0 18px}ol.steps li{margin-bottom:10px}ol.steps b{color:var(--ink);font-weight:500}
+.qr{background:#fff;border-radius:16px;aspect-ratio:1;display:grid;place-items:center;text-align:center;color:#555;font-size:14px;padding:18px;line-height:1.4}
+.qr img{width:100%;height:auto;display:block}
+.qrcap{color:var(--dim);font-size:14px;text-align:center;margin-top:10px}
+.mailrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:6px}
+.mail{font-family:"Source Serif 4",serif;font-size:clamp(19px,2.4vw,24px);color:var(--brass2);overflow-wrap:anywhere;user-select:all}
+.copy{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 15px Inter,sans-serif;cursor:pointer}
+.copied{color:var(--mut);font-size:14px}
+details{max-width:680px;margin:18px 0 0;border:1px solid var(--line);border-radius:14px;padding:0 20px}
+summary{padding:14px 0;color:var(--brass2);font-weight:500;cursor:pointer}
+.kgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 24px}.kgrid p{margin:0 0 14px}
+.demo{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px solid var(--line);text-align:center}footer a{color:var(--mut)}
+@media(max-width:760px){.pay,.pcards,.kgrid{grid-template-columns:minmax(0,1fr)}.qrbox{max-width:260px}}
+</style>
+</head>
+<body>
+<nav><div class="in"><a class="logo" href="../">MODNE</a><a class="btn ghost" href="../../app/?demo">Prøv demo</a></div></nav>
+
+<main class="wrap">
+ <h1>Bestill Modne</h1>
+ <p class="lead">Betal i Vipps-butikken. Faste priser. Foretaket er ikke mva-registrert, så prisene er endelige.</p>
+
+ <div class="pcards">
+  <div><span class="pl">Måler</span><b>490 kr</b><span>inkl. frakt. Batteri følger med. Koden til måleren står på baksiden.</span></div>
+  <div><span class="pl">Appen</span><b>199 kr/år</b><span>per måler. De første 5 dagene er gratis. Måleren virker alltid uten app.</span></div>
+ </div>
+
+ <section class="pay" aria-labelledby="slik">
+  <div>
+   <h2 id="slik">Slik bestiller du</h2>
+   <ol class="steps">
+    <li><b>Skann QR-koden</b> med mobilen, eller trykk på knappen. Vipps-butikken åpnes.</li>
+    <li><b>Velg måler eller app</b> og antall.</li>
+    <li><b>Kjøper du appen til en måler du har,</b> skriv koden bak på måleren (for eksempel 4AF2) i bestillingen, eller send den på e-post.</li>
+    <li><b>Betal med Vipps.</b> Du får beskjed når måleren er sendt, eller når appen er åpnet.</li>
+   </ol>
+   <p id="vippsbtn" hidden><a class="btn" id="vippslink" href="#">Åpne Vipps-butikken</a></p>
+   <p style="margin-top:22px;color:var(--mut)">Spørsmål eller større bestilling? Skriv til:</p>
+   <div class="mailrow"><span class="mail" id="mail">hans.einar.steinsland@gmail.com</span> <button type="button" class="copy" id="copyMail">Kopier</button> <span class="copied" id="copied" role="status"></span></div>
+   <details><summary>Kontaktinformasjon</summary>
+    <div class="kgrid">
+     <p>Hans Einar Steinsland<br>Prestagarden 75<br>4130 Hjelmeland</p>
+     <p>E-post: hans.einar.steinsland@gmail.com<br>Telefon: +47 938 22 938<br>Org.nr.: 982 820 073</p>
+    </div>
+   </details>
+  </div>
+  <div class="qrbox">
+   <div class="qr" id="qr">QR-koden til Vipps-butikken kommer her.</div>
+   <p class="qrcap">Skann med kameraet på mobilen</p>
+  </div>
+ </section>
+
+ <div class="demo">
+  <a class="btn" href="../../app/?demo">Prøv demo av appen</a>
+  <a class="btn ghost" href="../#bestill">Tilbake til produktsiden</a>
+  <a class="btn ghost" href="../../app/manual/">Bruksanvisning</a>
+ </div>
+</main>
+
+<footer>© 2026 Hans Einar Steinsland · Org.nr. 982 820 073 · <a href="../">modne.no</a></footer>
+
+<script>
+// Vipps-butikken: sett lenken her og legg vipps-qr.png i samme mappe. Tom lenke: plassholder vises.
+const VIPPS_URL='';
+if(VIPPS_URL){
+ document.getElementById('vippslink').href=VIPPS_URL;document.getElementById('vippsbtn').hidden=false;
+ document.getElementById('qr').innerHTML='<a href="'+VIPPS_URL+'"><img src="vipps-qr.png" alt="QR-kode til Vipps-butikken"></a>';
+}
+// e-postadressen kopieres, ingen e-postlenke
+document.getElementById('copyMail').addEventListener('click',async()=>{const el=document.getElementById('mail'),c=document.getElementById('copied');
+ try{await navigator.clipboard.writeText(el.textContent);c.textContent='Kopiert'}catch{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent='Markert, kopier med Ctrl+C'}});
+</script>
+</body>
+</html>

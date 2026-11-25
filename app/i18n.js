@@ -4,7 +4,7 @@
 
 export const STRINGS = {
   nb: {
-    'app.title': 'MODNA',
+    'app.title': 'MODNE',
     'conn.off': 'Ikke tilkoblet',
     'conn.connecting': 'Kobler til…',
     'conn.on': 'Tilkoblet {name}',
@@ -59,7 +59,7 @@ export const STRINGS = {
     'meters.trial': 'Prøveperiode til {when}',
     'meters.noLic': 'Uten abonnement',
     'meters.order': 'Bestill eller forleng abonnement',
-    'order.subject': 'Modna: bestille eller forlenge abonnement',
+    'order.subject': 'Modne: bestille eller forlenge abonnement',
     'order.body': 'Hei,\n\nJeg vil bestille eller forlenge abonnement for:\n{list}\n\nNavn:\nFirma, jaktlag eller restaurant:\nTelefon:\n',
     'order.serial': 'serienummer',
     'order.title': 'Bestill eller forleng abonnement',
@@ -261,7 +261,7 @@ export const STRINGS = {
     'foot.copy': '© {year} Hans Einar Steinsland',
   },
   en: {
-    'app.title': 'MODNA',
+    'app.title': 'MODNE',
     'conn.off': 'Connect',
     'conn.connecting': 'Connecting…',
     'conn.on': 'Connected to {name}',
@@ -316,7 +316,7 @@ export const STRINGS = {
     'meters.trial': 'Trial until {when}',
     'meters.noLic': 'No subscription',
     'meters.order': 'Order or extend subscription',
-    'order.subject': 'Modna: order or extend subscription',
+    'order.subject': 'Modne: order or extend subscription',
     'order.body': 'Hello,\n\nI would like to order or extend the subscription for:\n{list}\n\nName:\nCompany, hunting team or restaurant:\nPhone:\n',
     'order.serial': 'serial number',
     'order.title': 'Order or extend subscription',

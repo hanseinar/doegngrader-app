@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Modna, vit når kjøttet er klart</title>
-<meta name="description" content="Modna er en liten måler som henger ved kjøttet og teller modningen i døgngrader eller dager. Svaret står på skjermen, uten app og uten konto.">
+<title>Modne, vit når kjøttet er klart</title>
+<meta name="description" content="Modne er en liten måler som henger ved kjøttet og teller modningen i døgngrader eller dager. Svaret står på skjermen, uten app og uten konto.">
 <meta name="theme-color" content="#121110">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="../app/icon.svg" type="image/svg+xml">
@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Modna landingsside. Farger og skrift som appen: kull, messing, varmhvit,
+/* Modne landingsside. Farger og skrift som appen: kull, messing, varmhvit,
    Source Serif 4 for overskrifter og Inter for brødtekst. Filmen øverst i full bredde,
    deretter informasjonen i rolige bånd. Stabler under 860px. */
 :root{color-scheme:dark;--bg:#121110;--bg2:#191715;--card:#201d1a;--line:#36312b;--ink:#efe7da;--mut:#b5aa99;--dim:#8c8275;--brass:#c9a46a;--brass2:#e2c48d;--red:#b3392f}
@@ -125,6 +125,7 @@ ol.steps{padding-left:1.2em;color:var(--mut);margin:0 0 16px}ol.steps li{margin-
 #ordre{width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:14.5px/1.5 Inter,sans-serif;resize:vertical}
 .mailrow.left{justify-content:flex-start;margin-top:12px}
 .docs{margin-top:18px}
+.cta.center{justify-content:center;margin-top:26px}.docs.center{text-align:center;margin-inline:auto}
 footer a{color:var(--mut)}
 .mailrow{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 14px;max-width:none}
 .mail{font-family:"Source Serif 4",serif;font-size:clamp(20px,2.8vw,30px);color:var(--brass2);overflow-wrap:anywhere;user-select:all}
@@ -143,16 +144,16 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
 </head>
 <body>
 <nav><div class="wrap">
- <a class="logo" href="#top">MODNA</a>
+ <a class="logo" href="#top">MODNE</a>
  <a class="l" href="../app/manual/">Bruksanvisning</a>
  <a class="btn ghost hide-s" href="../app/?demo">Prøv demo</a><a class="btn" href="#bestill">Bestill</a>
 </div></nav>
 
-<section class="film" id="top" aria-label="Film om Modna">
+<section class="film" id="top" aria-label="Film om Modne">
  <video id="vid" autoplay muted playsinline preload="auto" poster="../film/plakat.jpg">
-  <source src="../film/modna.mp4" type="video/mp4">
+  <source src="../film/modne.mp4" type="video/mp4">
  </video>
- <div class="vfail"><div>MODNA</div></div>
+ <div class="vfail"><div>MODNE</div></div>
  <div class="vctl">
   <button type="button" id="bPlay" aria-label="Pause"><svg viewBox="0 0 24 24"><path id="iPlay" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg><span id="tPlay">Pause</span></button>
   <button type="button" id="bSound" aria-label="Slå på lyd"><svg viewBox="0 0 24 24"><path id="iSound" d="M4 9h4l5-4v14l-5-4H4zM16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" fill="currentColor"/></svg><span id="tSound">Slå på lyd</span></button>
@@ -163,10 +164,10 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
  <div>
   <p class="kick">Måler for modning av kjøtt</p>
   <h1>Vit når kjøttet er <em>klart.</em></h1>
-  <p class="lead">Modna henger ved kjøttet og teller modningen hele tiden, i døgngrader eller dager. Svaret står rett på skjermen. Ingen app, ingen konto, ingen dekning nødvendig.</p>
+  <p class="lead">Modne henger ved kjøttet og teller modningen hele tiden, i døgngrader eller dager. Svaret står rett på skjermen. Ingen app, ingen konto, ingen dekning nødvendig.</p>
   <div class="cta"><a class="btn" href="#bestill">Se priser og bestill</a><a class="btn ghost" href="../app/?demo">Prøv appen som demo</a></div>
  </div>
- <div class="meter"><div class="glow"></div><img src="../img/maaler.png" alt="Modna-måleren med 25,3 døgngrader og 23 grader i displayet" width="900" height="845"></div>
+ <div class="meter"><div class="glow"></div><img src="../img/maaler.png" alt="Modne-måleren med 25,3 døgngrader og 23 grader i displayet" width="900" height="845"></div>
 </div>
 <div class="wrap three">
  <div><b>Følger kjøttet</b><span>Måleren henger ved stykket, ikke i skapet. Flyttes kjøttet, flytter målingen med.</span></div>
@@ -179,7 +180,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
   <h2>Døgngrader, ikke antall dager</h2>
   <p class="lead">Kjøtt modnes raskere når det er varmere. Derfor teller jegere døgngrader: døgnets middeltemperatur lagt sammen, døgn for døgn.</p>
   <p>Fem døgn på 4 °C gir 20 døgngrader. Fem døgn på 8 °C gir 40. Like mange dager, dobbelt så mye modning.</p>
-  <p>Når dyret henger ute, svinger temperaturen fra time til time. Modna måler hele tiden og legger sammen for deg, så du slipper å regne og gjette.</p>
+  <p>Når dyret henger ute, svinger temperaturen fra time til time. Modne måler hele tiden og legger sammen for deg, så du slipper å regne og gjette.</p>
   <p class="note">Veiledende mål for hjortevilt fra Norsk Hjortesenter: rundt 40 for kalv, 40 til 50 er vanlig, eldre dyr gjerne 60 til 120.</p>
  </div>
  <div class="panel">
@@ -211,14 +212,14 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
   </div>
  </div>
  <div class="meter" style="max-width:460px">
-  <img src="../img/maaler.png" alt="Displayet på Modna med nummererte felter" width="900" height="845">
+  <img src="../img/maaler.png" alt="Displayet på Modne med nummererte felter" width="900" height="845">
   <span class="num pin" style="left:46.4%;top:27.9%">1</span><span class="num pin" style="left:82.8%;top:45.5%">2</span><span class="num pin" style="left:76.7%;top:62.1%">3</span><span class="num pin" style="left:60.2%;top:15.9%">4</span><span class="num pin" style="left:77.6%;top:13.5%">5</span><span class="num pin" style="left:29%;top:69.5%">6</span>
  </div>
 </div></section>
 
 <section class="band alt" id="appen"><div class="wrap">
  <h2>Appen gir deg hele bildet</h2>
- <p class="lead">Åpne modna.info-web.no/app i nettleseren og koble til måleren over Bluetooth. Ingenting å laste ned, ingen konto.</p>
+ <p class="lead">Åpne modne.no/app i nettleseren og koble til måleren over Bluetooth. Ingenting å laste ned, ingen konto.</p>
 
  <div class="feature">
   <div class="shot"><img src="../img/hovedtall.jpg" alt="Døgngrader og fremdrift mot målet i appen"></div>
@@ -289,7 +290,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
  <div>
   <details><summary>Teller den når det er kuldegrader?</summary><p>Nei. Temperatur under 0 °C gir ingen døgngrader, fordi frossent kjøtt ikke modnes. Tellingen fortsetter når det blir varmere.</p></details>
   <details><summary>Må jeg ha med mobilen?</summary><p>Nei. Svaret står i displayet. Appen er for den som vil se graf, fuktighet, anslag og historikk.</p></details>
-  <details><summary>Hvilke telefoner virker appen på?</summary><p>Appen bruker Bluetooth i nettleseren. Det virker i Chrome, Edge og Vivaldi på Android og PC.</p><p>På iPhone og iPad støtter ingen av de vanlige nettleserne Bluetooth fra nettsider, heller ikke Chrome og Edge, fordi de bruker samme motor som Safari. Egne nettlesere fra App Store, som Bluefy, legger til Bluetooth, men de er ikke testet med Modna ennå.</p></details>
+  <details><summary>Hvilke telefoner virker appen på?</summary><p>Appen bruker Bluetooth i nettleseren. Det virker i Chrome, Edge og Vivaldi på Android og PC.</p><p>På iPhone og iPad støtter ingen av de vanlige nettleserne Bluetooth fra nettsider, heller ikke Chrome og Edge, fordi de bruker samme motor som Safari. Egne nettlesere fra App Store, som Bluefy, legger til Bluetooth, men de er ikke testet med Modne ennå.</p></details>
   <details><summary>Hva slags batteri bruker den?</summary><p>Et vanlig CR2032 knappcellebatteri. Batteriet følger med, og nye får du kjøpt i de aller fleste dagligvarebutikker.</p></details>
   <details><summary>Hvordan skiller jeg målerne fra hverandre?</summary><p>Hver måler har en kode på fire tegn, for eksempel 4AF2. Koden står bak på måleren når du får den, og den vises i appen. Samme kode kan stå på merkelappen på kjøttstykket.</p></details>
  </div>
@@ -297,42 +298,16 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
 
 <section class="band" id="bestill"><div class="wrap">
  <h2>Priser og bestilling</h2>
- <p class="lead">Frakt er inkludert. Foretaket er ikke mva-registrert, så prisene er endelige.</p>
+ <p class="lead">Faste priser. Foretaket er ikke mva-registrert, så prisene er endelige.</p>
 
  <div class="pcards">
-  <div><span class="pl">Måler</span><b>490 kr</b><span>inkl. frakt. Nr. 2: 10&nbsp;% rabatt. Fra nr. 3: 20&nbsp;% rabatt.</span></div>
-  <div><span class="pl">Abonnement på appen</span><b>390 kr/år</b><span>for første måler. Hver neste måler 90&nbsp;kr/år, 77&nbsp;% rabatt.</span></div>
-  <div><span class="pl">Prøv før du bestemmer deg</span><b>5 dager gratis</b><span>med appen for hver ny måler. Måleren virker alltid uten abonnement.</span></div>
+  <div><span class="pl">Måler</span><b>490 kr</b><span>inkl. frakt. Batteri følger med.</span></div>
+  <div><span class="pl">Appen</span><b>199 kr/år</b><span>per måler. Graf, fuktighet, anslag med værvarsel og historikk.</span></div>
+  <div><span class="pl">Prøv før du bestemmer deg</span><b>5 dager gratis</b><span>med appen for hver ny måler. Måleren virker alltid uten app.</span></div>
  </div>
 
- <div class="order">
-  <div class="panel">
-   <h3>Regn ut prisen</h3>
-   <div class="row"><div class="lab">Antall målere</div>
-    <div class="stepper"><button type="button" id="nMinus" aria-label="Færre målere">−</button><output id="n" aria-live="polite">1</output><button type="button" id="nPlus" aria-label="Flere målere">+</button></div></div>
-   <div class="row"><div class="lab">Skal brukes til</div>
-    <div class="seg" id="bruk"><button type="button" data-v="vilt" aria-pressed="true">Vilt</button><button type="button" data-v="restaurant" aria-pressed="false">Restaurant</button><button type="button" data-v="både vilt og restaurant" aria-pressed="false">Begge</button></div></div>
-   <table class="pris"><tbody id="prisRader"></tbody></table>
-  </div>
-  <div>
-   <h3>Slik bestiller du</h3>
-   <ol class="steps">
-    <li>Velg antall målere i kalkulatoren. Prisen regnes ut med en gang.</li>
-    <li>Kopier bestillingen, fyll inn navn og adresse, og send den på e-post.</li>
-    <li>Du får svar med betaling og leveringstid.</li>
-   </ol>
-   <textarea id="ordre" rows="9" readonly aria-label="Bestillingstekst"></textarea>
-   <p class="mailrow left"><button type="button" class="copy" id="copyOrder">Kopier bestillingen</button> <span class="copied" id="copiedOrder" role="status"></span></p>
-   <p class="mailrow left"><span class="mail" id="mail">hans.einar.steinsland@gmail.com</span> <button type="button" class="copy" id="copyMail">Kopier</button> <span class="copied" id="copied" role="status"></span></p>
-   <details class="kontakt"><summary>Kontaktinformasjon</summary>
-    <div class="kgrid">
-     <p>Hans Einar Steinsland<br>Prestagarden 75<br>4130 Hjelmeland</p>
-     <p>E-post: hans.einar.steinsland@gmail.com<br>Telefon: +47 938 22 938<br>Org.nr.: 982 820 073</p>
-    </div>
-   </details>
-   <p class="docs"><a href="../app/manual/">Bruksanvisning</a> · <a href="../app/manual/doegngrader-bruksanvisning.pdf">PDF</a></p>
-  </div>
- </div>
+ <div class="cta center"><a class="btn" href="bestill/">Bestill</a><a class="btn ghost" href="../app/?demo">Prøv demo av appen</a></div>
+ <p class="docs center"><a href="../app/manual/">Bruksanvisning</a> · <a href="../app/manual/doegngrader-bruksanvisning.pdf">PDF</a></p>
 </div></section>
 
 <footer>© 2026 Hans Einar Steinsland · Org.nr. 982 820 073 · <a href="../app/manual/">Bruksanvisning</a> · <a href="../app/?demo">Demo</a></footer>
@@ -357,38 +332,6 @@ v.querySelector('source').addEventListener('error',fail);v.addEventListener('err
 const io=new IntersectionObserver(es=>{for(const e of es)if(!e.isIntersecting&&!v.paused)v.pause()},{threshold:.15});io.observe(v);
 ui();
 
-// e-postadressen kopieres, ingen e-postlenke
-document.getElementById('copyMail').addEventListener('click',async()=>{const el=document.getElementById('mail'),c=document.getElementById('copied');
- try{await navigator.clipboard.writeText(el.textContent);c.textContent='Kopiert'}catch{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);c.textContent='Markert, kopier med Ctrl+C'}});
-
-// priser og bestilling
-{
-const PRIS=490,AB=390,AB2=90;
-const maalerPris=i=>i===0?PRIS:i===1?Math.round(PRIS*.9):Math.round(PRIS*.8);
-const kr=x=>x.toLocaleString('nb-NO')+' kr';
-let n=1,bruk='vilt';
-const rader=document.getElementById('prisRader'),ordre=document.getElementById('ordre'),nOut=document.getElementById('n');
-const vis=()=>{nOut.textContent=n;
- const p2=maalerPris(1),p3=maalerPris(2),k3=Math.max(0,n-2);
- let sumM=PRIS+(n>1?p2:0)+k3*p3,sumA=AB+(n-1)*AB2;
- let r=`<tr><td>Måler 1</td><td>${kr(PRIS)}</td></tr>`;
- if(n>1)r+=`<tr><td>Måler 2 <span class="rab">−10 %</span></td><td>${kr(p2)}</td></tr>`;
- if(k3)r+=`<tr><td>${k3===1?'Måler 3':`Måler 3 til ${n}, ${k3} × ${kr(p3)}`} <span class="rab">−20 %</span></td><td>${kr(k3*p3)}</td></tr>`;
- r+=`<tr class="sum"><td>Målere, inkl. frakt</td><td>${kr(sumM)}</td></tr><tr class="gap"><td></td><td></td></tr>`;
- r+=`<tr><td>Abonnement, første måler</td><td>${kr(AB)}/år</td></tr>`;
- if(n>1)r+=`<tr><td>${n-1} ${n-1===1?'måler':'målere'} til, ${n-1} × ${kr(AB2)} <span class="rab">−77 %</span></td><td>${kr((n-1)*AB2)}/år</td></tr>`;
- r+=`<tr class="sum"><td>Abonnement per år</td><td>${kr(sumA)}/år</td></tr>`;
- r+=`<tr class="tot"><td>Første år</td><td>${kr(sumM+sumA)}</td></tr>`;
- rader.innerHTML=r;
- ordre.value=`Bestilling Modna\n\nAntall målere: ${n}, til ${bruk}\nMålere: ${kr(sumM)}, inkl. frakt\nAbonnement på appen: ${kr(sumA)} per år\nFørste år: ${kr(sumM+sumA)}\n\nNavn:\nFirma, jaktlag eller restaurant:\nLeveringsadresse:\nTelefon:\n`;
-};
-document.getElementById('nMinus').addEventListener('click',()=>{if(n>1){n--;vis()}});
-document.getElementById('nPlus').addEventListener('click',()=>{if(n<50){n++;vis()}});
-document.getElementById('bruk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;bruk=b.dataset.v;for(const c of b.parentNode.children)c.setAttribute('aria-pressed',c===b);vis()});
-document.getElementById('copyOrder').addEventListener('click',async()=>{const c=document.getElementById('copiedOrder');
- try{await navigator.clipboard.writeText(ordre.value);c.textContent='Kopiert'}catch{ordre.focus();ordre.select();c.textContent='Markert, kopier med Ctrl+C'}});
-vis();
-}
 
 // kalkulator
 const t=document.getElementById('t'),tv=document.getElementById('tv'),mv=document.getElementById('mv'),res=document.getElementById('res'),rest=document.getElementById('rest'),cs=document.getElementById('cs');

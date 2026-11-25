@@ -1,7 +1,7 @@
 {
-  "name": "MODNA",
-  "short_name": "MODNA",
-  "description": "Les av MODNA-måleren over Bluetooth.",
+  "name": "MODNE",
+  "short_name": "MODNE",
+  "description": "Les av MODNE-måleren over Bluetooth.",
   "lang": "nb",
   "start_url": "./",
   "scope": "./",
