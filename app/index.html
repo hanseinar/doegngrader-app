@@ -10,6 +10,8 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="style.css">
+<script>/* Web Bluetooth i Safari på iPhone og iPad via beacio-utvidelsen. Lastes bare der (se vendor/README.md). */
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) document.write('<script src="vendor/beacio-2.2.0.js" data-operator-name="MODNE"><\/script>');</script>
 <script src="ameter.js"></script>
 <script type="module" src="app.js"></script>
 </head>

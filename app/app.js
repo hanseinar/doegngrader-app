@@ -28,7 +28,13 @@ function init() {
   initSync();
   flush();
   applyUse();
-  if (!state.demo && !('bluetooth' in navigator)) $('nosupport').hidden = false;
+  // Bluetooth: innebygd (Chrome, Edge) eller beacio-utvidelsen i Safari på iPhone.
+  // beacio legger inn en stedfortreder for navigator.bluetooth når utvidelsen mangler, så 'bluetooth' in navigator holder ikke.
+  const btReady = () => (typeof Bluetooth !== 'undefined' && navigator.bluetooth instanceof Bluetooth) || navigator.beacio?.__beacio === true;
+  if (!state.demo && !btReady()) {
+    $('nosupport').hidden = false;
+    window.addEventListener('beacio:extension:ready', () => { if (btReady()) $('nosupport').hidden = true; }, { once: true });
+  }
 
   $('conn').addEventListener('click', (e) => {
     e.stopPropagation();
