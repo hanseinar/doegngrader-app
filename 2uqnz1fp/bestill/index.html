@@ -55,7 +55,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
 
 <main class="wrap">
  <h1>Bestill Modne</h1>
- <p class="lead">Betal i Vipps-butikken. Faste priser. Foretaket er ikke mva-registrert, så prisene er endelige.</p>
+ <p class="lead">Betal med Vipps til MODNE (#143030). Faste priser. Foretaket er ikke mva-registrert, så prisene er endelige.</p>
 
  <div class="pcards">
   <div><span class="pl">Måler</span><b>490 kr</b><span>inkl. frakt. Batteri følger med. Koden til måleren står på baksiden.</span></div>
@@ -83,7 +83,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
   </div>
   <div class="qrbox">
    <div class="qr" id="qr">QR-koden til Vipps-butikken kommer her.</div>
-   <p class="qrcap">Skann med kameraet på mobilen</p>
+   <p class="qrcap">Skann med kameraet på mobilen<br>Vipps: MODNE #143030</p>
   </div>
  </section>
 
@@ -98,7 +98,7 @@ footer{padding:28px max(5vw,18px);color:var(--dim);font-size:14px;border-top:1px
 
 <script>
 // Vipps-butikken: sett lenken her og legg vipps-qr.png i samme mappe. Tom lenke: plassholder vises.
-const VIPPS_URL='';
+const VIPPS_URL='https://qr.vipps.no/vp/J-Q5BWBSp';
 if(VIPPS_URL){
  document.getElementById('vippslink').href=VIPPS_URL;document.getElementById('vippsbtn').hidden=false;
  document.getElementById('qr').innerHTML='<a href="'+VIPPS_URL+'"><img src="vipps-qr.png" alt="QR-kode til Vipps-butikken"></a>';
