@@ -8,7 +8,7 @@
 // Svaret er signert med Ed25519 og lagres per måler. Uten nett gjelder lagret svar
 // til den første av: prøveperiodens slutt eller abonnementets siste dag, og exp.
 
-export const SERVER = 'https://kunde.modna.info-web.no';          // admin/ (lisens-API)
+export const SERVER = 'https://admin.modne.no';          // admin/ (lisens-API)
 export const PUBKEY = 'bBamFqNVzzlK_R5MTa9whwL8RYDSG3jJL_zl4z8V0F8';  // fra /api/v1/pubkey (base64url, 32 byte)
 export const ORDER_EMAIL = 'hans.einar.steinsland@gmail.com';   // bestilling og forlengelse
 
